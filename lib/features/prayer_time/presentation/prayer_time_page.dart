@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:adhan/adhan.dart';
+
 import '../prayer_time_provider.dart';
 import '../data/prayer_time_service.dart';
 
@@ -19,81 +21,120 @@ class _PrayerTimePageState extends State<PrayerTimePage> {
     context.read<PrayerTimeProvider>().loadPrayerTimes();
   }
 
+  /// =========================
+  /// SAFE FORMAT NEXT PRAYER
+  /// =========================
+  String _formatNextPrayerTime(
+    PrayerTimes pt,
+    Prayer? prayer,
+  ) {
+    if (prayer == null) return '--:--';
+
+    final time = pt.timeForPrayer(prayer);
+    if (time == null) return '--:--';
+
+    return PrayerTimeService.formatTime(time);
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<PrayerTimeProvider>();
+
+    if (provider.loading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (provider.error != null) {
+      return const Scaffold(
+        body: Center(child: Text('Terjadi kesalahan')),
+      );
+    }
+
+    final pt = provider.prayerTimes;
+    final next = provider.nextPrayer;
+    final hijri = provider.hijriDate;
+
+    if (pt == null) {
+      return const Scaffold(
+        body: Center(child: Text('Data belum tersedia')),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Waktu Sholat'),
         centerTitle: true,
       ),
-      body: Builder(
-        builder: (_) {
-          if (provider.loading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (provider.error != null) {
-            return Center(child: Text(provider.error!));
-          }
-
-          final pt = provider.prayerTimes!;
-          final next = provider.nextPrayer;
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                /// ===== TOP CARDS =====
-                Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: _topCardHeight,
-                        child: _locationCard(provider),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: SizedBox(
-                        height: _topCardHeight,
-                        child: _nextPrayerCard(
-                          title: 'Akan Datang',
-                          name: next?.name ?? '-',
-                          time: next != null
-                              ? PrayerTimeService.formatTime(
-                                  pt.timeForPrayer(next)!,
-                                )
-                              : '--:--',
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 28),
-
-                /// ===== LIST TITLE =====
-                const Text(
-                  'Jadwal Hari Ini',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            /// =========================
+            /// HIJRI DATE
+            /// =========================
+            if (hijri != null) ...[
+              Center(
+                child: Text(
+                  hijri,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black54,
                   ),
                 ),
-                const SizedBox(height: 12),
+              ),
+              const SizedBox(height: 16),
+            ],
 
-                _item('Subuh', pt.fajr),
-                _item('Dzuhur', pt.dhuhr),
-                _item('Ashar', pt.asr),
-                _item('Maghrib', pt.maghrib),
-                _item('Isya', pt.isha),
+            /// =========================
+            /// TOP CARDS
+            /// =========================
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: _topCardHeight,
+                    child: _locationCard(provider),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: _topCardHeight,
+                    child: _nextPrayerCard(
+                      title: 'Akan Datang',
+                      name: next?.name,
+                      time: _formatNextPrayerTime(pt, next),
+                    ),
+                  ),
+                ),
               ],
             ),
-          );
-        },
+
+            const SizedBox(height: 28),
+
+            /// =========================
+            /// LIST TITLE
+            /// =========================
+            const Text(
+              'Jadwal Hari Ini',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            _item('Subuh', pt.fajr),
+            _item('Dzuhur', pt.dhuhr),
+            _item('Ashar', pt.asr),
+            _item('Maghrib', pt.maghrib),
+            _item('Isya', pt.isha),
+          ],
+        ),
       ),
     );
   }
@@ -102,7 +143,7 @@ class _PrayerTimePageState extends State<PrayerTimePage> {
   // LOCATION CARD
   // =========================
   Widget _locationCard(PrayerTimeProvider provider) {
-    final city = provider.city ?? 'Memuat...';
+    final city = provider.city ?? 'Memuat lokasi';
     final country = provider.country ?? '';
 
     return Container(
@@ -120,15 +161,16 @@ class _PrayerTimePageState extends State<PrayerTimePage> {
           ),
           const SizedBox(height: 12),
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Icon(Icons.location_on, color: Colors.green, size: 20),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  '$city${country.isNotEmpty ? ',\n$country' : ''}',
+                  '$city${country.isNotEmpty ? ', $country' : ''}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 17,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -150,7 +192,7 @@ class _PrayerTimePageState extends State<PrayerTimePage> {
   // =========================
   Widget _nextPrayerCard({
     required String title,
-    required String name,
+    required String? name,
     required String time,
   }) {
     return Container(
@@ -179,7 +221,7 @@ class _PrayerTimePageState extends State<PrayerTimePage> {
           ),
           const SizedBox(height: 12),
           Text(
-            name.toUpperCase(),
+            (name ?? '-').toUpperCase(),
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,

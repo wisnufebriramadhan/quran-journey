@@ -1,0 +1,4 @@
+enum PrayerMethodType {
+  kemenag,
+  mwl,
+}

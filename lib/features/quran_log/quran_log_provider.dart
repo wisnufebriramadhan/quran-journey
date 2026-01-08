@@ -27,13 +27,12 @@ class QuranLogProvider extends ChangeNotifier {
   }
 
   Future<void> addLog(Map<String, dynamic> data) async {
-    try {
-      await repo.createLog(data);
-      await fetchLogs();
-    } catch (e) {
-      error = 'Gagal menyimpan data';
-      notifyListeners();
+    if (hasLoggedToday) {
+      throw Exception('Bacaan hari ini sudah dicatat');
     }
+
+    await repo.createLog(data);
+    await fetchLogs();
   }
 
   Map<DateTime, List<QuranLog>> get logsByDate {
@@ -48,5 +47,16 @@ class QuranLogProvider extends ChangeNotifier {
     }
 
     return map;
+  }
+
+  bool get hasLoggedToday {
+    final today = DateTime.now();
+
+    return logs.any((log) {
+      final logDate = DateTime.parse(log.date);
+      return logDate.year == today.year &&
+          logDate.month == today.month &&
+          logDate.day == today.day;
+    });
   }
 }

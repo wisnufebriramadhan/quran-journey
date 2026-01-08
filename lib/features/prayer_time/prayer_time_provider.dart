@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:adhan/adhan.dart';
+
 import '../../core/services/location_service.dart';
+import '../../features/settings/data/settings_model.dart';
 import 'data/prayer_time_service.dart';
 
 class PrayerTimeProvider extends ChangeNotifier {
@@ -9,28 +11,49 @@ class PrayerTimeProvider extends ChangeNotifier {
 
   String? city;
   String? country;
+  String? hijriDate;
+
+  SettingsModel? _settings;
 
   bool loading = false;
   String? error;
 
+  // 🔥 CONSTRUCTOR KOSONG (WAJIB)
+  PrayerTimeProvider();
+
+  // 🔥 DIPANGGIL DARI ProxyProvider
+  void updateSettings(SettingsModel settings) {
+    _settings = settings;
+    loadPrayerTimes();
+  }
+
   Future<void> loadPrayerTimes() async {
+    if (_settings == null) return;
+
     loading = true;
     error = null;
     notifyListeners();
 
     try {
-      final position = await LocationService.getCurrentPosition();
+      final location = await LocationService.getCurrentLocation();
 
-      final placemark = await LocationService.getPlacemark(position);
-      city = placemark.locality ?? placemark.subAdministrativeArea;
-      country = placemark.country;
+      city = location.city;
+      country = location.country;
 
       prayerTimes = PrayerTimeService.getPrayerTimes(
-        latitude: position.latitude,
-        longitude: position.longitude,
+        latitude: location.latitude,
+        longitude: location.longitude,
+        settings: _settings!,
       );
 
-      nextPrayer = prayerTimes!.nextPrayer();
+      final next = prayerTimes!.nextPrayer();
+
+      if (next == Prayer.none) {
+        // 🔥 sudah lewat Isya → next Subuh BESOK
+        nextPrayer = Prayer.fajr;
+      } else {
+        nextPrayer = next;
+      }
     } catch (e) {
       error = 'Gagal memuat waktu sholat';
     } finally {

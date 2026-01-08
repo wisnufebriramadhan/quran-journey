@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:quran_tracker/features/auth/presentation/register_page.dart';
 import 'package:quran_tracker/features/prayer_time/prayer_time_provider.dart';
+import 'package:quran_tracker/features/settings/persentation/prayer_settings_page.dart';
+import 'package:quran_tracker/features/settings/settings_provider.dart';
 
 import 'core/constants/app_theme.dart';
 import 'routes/app_routes.dart';
@@ -26,7 +29,20 @@ class QuranTrackerApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => QuranLogProvider()),
-        ChangeNotifierProvider(create: (_) => PrayerTimeProvider()),
+
+        // ✅ SETTINGS HARUS DULUAN
+        ChangeNotifierProvider(
+          create: (_) => SettingsProvider()..load(),
+        ),
+
+        // ✅ PrayerTime tergantung Settings
+        ChangeNotifierProxyProvider<SettingsProvider, PrayerTimeProvider>(
+          create: (_) => PrayerTimeProvider(),
+          update: (_, settingsProvider, prayerTimeProvider) {
+            prayerTimeProvider!.updateSettings(settingsProvider.settings);
+            return prayerTimeProvider;
+          },
+        ),
       ],
       child: MaterialApp(
         title: 'Quran Tracker',
@@ -39,6 +55,8 @@ class QuranTrackerApp extends StatelessWidget {
           AppRoutes.home: (_) => const HomePage(),
           AppRoutes.quranLog: (_) => const QuranLogPage(),
           AppRoutes.prayerTime: (_) => const PrayerTimePage(),
+          AppRoutes.register: (_) => const RegisterPage(),
+          AppRoutes.settings: (_) => const PrayerSettingsPage(),
         },
       ),
     );

@@ -19,6 +19,7 @@ class HomePage extends StatelessWidget {
               icon: Icons.menu_book_rounded,
               title: 'Pencatatan Al-Qur’an',
               subtitle: 'Catat bacaan harian dan lihat riwayat',
+              color: Colors.green,
               onTap: () {
                 Navigator.pushNamed(context, AppRoutes.quranLog);
               },
@@ -28,8 +29,19 @@ class HomePage extends StatelessWidget {
               icon: Icons.mosque_rounded,
               title: 'Waktu Sholat',
               subtitle: 'Jadwal sholat & azan hari ini',
+              color: Colors.teal,
               onTap: () {
                 Navigator.pushNamed(context, AppRoutes.prayerTime);
+              },
+            ),
+            const SizedBox(height: 16),
+            _MenuCard(
+              icon: Icons.settings_rounded,
+              title: 'Pengaturan',
+              subtitle: 'Waktu sholat & kalender hijriah',
+              color: Colors.blueGrey,
+              onTap: () {
+                Navigator.pushNamed(context, AppRoutes.settings);
               },
             ),
           ],
@@ -43,12 +55,14 @@ class _MenuCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+  final Color color;
   final VoidCallback onTap;
 
   const _MenuCard({
     required this.icon,
     required this.title,
     required this.subtitle,
+    required this.color,
     required this.onTap,
   });
 
@@ -61,7 +75,7 @@ class _MenuCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: Colors.green.shade50,
+          color: color.withOpacity(0.08),
         ),
         child: Row(
           children: [
@@ -69,7 +83,7 @@ class _MenuCard extends StatelessWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Colors.green,
+                color: color,
               ),
               child: Icon(icon, color: Colors.white, size: 28),
             ),
