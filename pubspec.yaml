@@ -37,6 +37,13 @@ dependencies:
   # Shared Preferences
   shared_preferences: ^2.1.1
 
+  # Audio playback
+  just_audio: ^0.9.36
+  audio_session: ^0.1.19
+
+  # HTTP
+  http: ^1.2.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -48,6 +55,10 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icon/app_icon.png
+  fonts:
+    - family: AmiriQuran
+      fonts:
+        - asset: assets/fonts/AmiriQuran-Regular.ttf
 
 dependency_overrides:
   geolocator_android: 4.5.1

@@ -6,4 +6,5 @@ class AppRoutes {
   static const quranLog = '/quran-log';
   static const prayerTime = '/prayer-time';
   static const settings = '/settings';
+  static const quranAudio = '/quran-audio';
 }
