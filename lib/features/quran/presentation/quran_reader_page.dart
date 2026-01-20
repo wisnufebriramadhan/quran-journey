@@ -25,7 +25,6 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
   final AudioPlayerService _audio = AudioPlayerService();
 
   List<QuranVerse> verses = [];
-
   late int currentSurah;
 
   /// 🎙 Default qari
@@ -44,19 +43,25 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
     super.initState();
     currentSurah = widget.surah;
     _loadVerses();
-    _prepareAudio();
+    _prepareAudioIfNeeded();
   }
 
+  /// =========================
+  /// LOAD AYAT
+  /// =========================
   Future<void> _loadVerses() async {
     final all = await _textService.fetchSurah(currentSurah);
+    if (!mounted) return;
     setState(() => verses = all);
   }
 
-  Future<void> _prepareAudio({Duration? position}) async {
+  /// =========================
+  /// PREPARE AUDIO
+  /// =========================
+  Future<void> _prepareAudioIfNeeded() async {
     await _audio.prepare(
       qari: currentQari,
       surah: currentSurah,
-      position: position ?? Duration.zero,
     );
   }
 
@@ -69,12 +74,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
     if (state.processingState == ProcessingState.loading ||
         state.processingState == ProcessingState.buffering) return;
 
-    if (state.playing) {
-      await _audio.pause();
-    } else {
-      await _audio.play();
-    }
-
+    state.playing ? await _audio.pause() : await _audio.play();
     setState(() {});
   }
 
@@ -84,33 +84,27 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
   Future<void> _pickQari() async {
     final selected = await showModalBottomSheet<String>(
       context: context,
-      builder: (_) {
-        return ListView(
-          children: qaris.map((q) {
-            return ListTile(
-              title: Text(q.replaceAll('_', ' ')),
-              trailing: q == currentQari
-                  ? const Icon(Icons.check, color: Colors.green)
-                  : null,
-              onTap: () => Navigator.pop(context, q),
-            );
-          }).toList(),
-        );
-      },
+      builder: (_) => ListView(
+        children: qaris.map((q) {
+          return ListTile(
+            title: Text(q.replaceAll('_', ' ')),
+            trailing: q == currentQari ? const Icon(Icons.check) : null,
+            onTap: () => Navigator.pop(context, q),
+          );
+        }).toList(),
+      ),
     );
 
     if (selected == null || selected == currentQari) return;
 
-    final wasPlaying = _audio.player.playing;
+    final wasPlaying = _audio.isPlaying;
     final pos = _audio.player.position;
 
     setState(() => currentQari = selected);
 
-    await _prepareAudio(position: pos);
-
-    if (wasPlaying) {
-      await _audio.play();
-    }
+    await _audio.prepare(qari: currentQari, surah: currentSurah);
+    if (pos > Duration.zero) await _audio.seek(pos);
+    if (wasPlaying) await _audio.play();
   }
 
   /// =========================
@@ -119,24 +113,17 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
   Future<void> _pickSurah() async {
     final selected = await showModalBottomSheet<int>(
       context: context,
-      builder: (_) {
-        return ListView(
-          children: SurahData.list.map((s) {
-            return ListTile(
-              leading: Text(s.number.toString()),
-              title: Text(s.latin),
-              subtitle: Text(
-                s.arabic,
-                textDirection: TextDirection.rtl,
-              ),
-              trailing: s.number == currentSurah
-                  ? const Icon(Icons.check, color: Colors.green)
-                  : null,
-              onTap: () => Navigator.pop(context, s.number),
-            );
-          }).toList(),
-        );
-      },
+      builder: (_) => ListView(
+        children: SurahData.list.map((s) {
+          return ListTile(
+            leading: Text(s.number.toString()),
+            title: Text(s.latin),
+            subtitle: Text(s.arabic, textDirection: TextDirection.rtl),
+            trailing: s.number == currentSurah ? const Icon(Icons.check) : null,
+            onTap: () => Navigator.pop(context, s.number),
+          );
+        }).toList(),
+      ),
     );
 
     if (selected == null || selected == currentSurah) return;
@@ -147,7 +134,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
     });
 
     await _loadVerses();
-    await _prepareAudio();
+    await _audio.prepare(qari: currentQari, surah: currentSurah);
   }
 
   @override
@@ -162,14 +149,9 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
           onTap: _pickSurah,
           child: Column(
             children: [
-              Text(
-                surahInfo.latin,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-              Text(
-                surahInfo.arabic,
-                style: const TextStyle(fontSize: 12),
-              ),
+              Text(surahInfo.latin,
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text(surahInfo.arabic, style: const TextStyle(fontSize: 12)),
             ],
           ),
         ),
@@ -184,43 +166,40 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                /// 📖 AYAT
+                /// ================= AYAT =================
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 32,
-                    ),
+                    padding: const EdgeInsets.only(
+                        left: 20, right: 20, top: 12, bottom: 12),
                     child: Directionality(
                       textDirection: TextDirection.rtl,
-                      child: Wrap(
-                        runSpacing: 28,
-                        children: verses.map((v) {
-                          return RichText(
-                            textAlign: TextAlign.center,
-                            text: TextSpan(
-                              style: const TextStyle(
-                                fontFamily: 'AmiriQuran',
-                                fontSize: 28,
-                                color: Colors.black,
-                                height: 2.0,
+                      child: RichText(
+                        textAlign: TextAlign.center,
+                        text: TextSpan(
+                          style: const TextStyle(
+                            fontFamily: 'AmiriQuran',
+                            fontSize: 28,
+                            color: Colors.black,
+                            height: 2.4,
+                          ),
+                          children: verses.expand((v) {
+                            return [
+                              TextSpan(text: '${v.text} '),
+                              WidgetSpan(
+                                alignment: PlaceholderAlignment.baseline,
+                                baseline: TextBaseline.alphabetic,
+                                child: AyahNumber(v.ayah),
                               ),
-                              children: [
-                                TextSpan(text: v.text),
-                                WidgetSpan(
-                                  alignment: PlaceholderAlignment.middle,
-                                  child: AyahNumber(v.ayah),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
+                              const TextSpan(text: ' '),
+                            ];
+                          }).toList(),
+                        ),
                       ),
                     ),
                   ),
                 ),
 
-                /// 🎧 AUDIO CONTROL
+                /// ================= AUDIO =================
                 Container(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
                   decoration: BoxDecoration(
@@ -234,7 +213,6 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
                   ),
                   child: Column(
                     children: [
-                      /// ⏳ PROGRESS
                       StreamBuilder<Duration>(
                         stream: player.positionStream,
                         builder: (_, snap) {
@@ -248,15 +226,11 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
                                 .clamp(0, dur.inMilliseconds)
                                 .toDouble(),
                             onChanged: (v) {
-                              player.seek(
-                                Duration(milliseconds: v.toInt()),
-                              );
+                              _audio.seek(Duration(milliseconds: v.toInt()));
                             },
                           );
                         },
                       ),
-
-                      /// ▶️ PLAY / PAUSE
                       IconButton(
                         iconSize: 44,
                         icon: StreamBuilder<PlayerState>(
@@ -273,14 +247,10 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
                         ),
                         onPressed: _togglePlay,
                       ),
-
-                      const SizedBox(height: 4),
                       Text(
                         currentQari.replaceAll('_', ' '),
                         style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.black54,
-                        ),
+                            fontSize: 12, color: Colors.black54),
                       ),
                     ],
                   ),
@@ -292,7 +262,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
 }
 
 /// =========================
-/// 🔢 NOMOR AYAT
+/// 🔢 NOMOR AYAT (ARABIC)
 /// =========================
 class AyahNumber extends StatelessWidget {
   final int number;
@@ -301,20 +271,37 @@ class AyahNumber extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 6),
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.black54),
-      ),
-      child: Text(
-        number.toString(),
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
+    return Transform.translate(
+      offset: const Offset(0, -1.8),
+      child: Container(
+        padding: const EdgeInsets.only(left: 10, right: 10, top: 0, bottom: 8),
+        transformAlignment: AlignmentDirectional.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.black54),
+        ),
+        child: Text(
+          toArabicNumber(number),
+          textDirection: TextDirection.rtl,
+          style: const TextStyle(
+            fontFamily: 'AmiriQuran',
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
   }
+}
+
+/// =========================
+/// 🔤 ANGKA ARAB
+/// =========================
+String toArabicNumber(int number) {
+  const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+  return number
+      .toString()
+      .split('')
+      .map((e) => arabicDigits[int.parse(e)])
+      .join();
 }

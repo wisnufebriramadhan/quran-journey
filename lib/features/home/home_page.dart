@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // ✅ TAMBAHAN
+import 'package:flutter/services.dart';
+import 'package:quran_tracker/features/extentions.dart';
 import 'package:quran_tracker/features/quran/presentation/quran_reader_page.dart';
+import 'package:quran_tracker/features/quran_log/presentation/widgets/mini_player.dart';
 import '../../routes/app_routes.dart';
 
 class HomePage extends StatefulWidget {
@@ -33,8 +35,6 @@ class _HomePageState extends State<HomePage> {
 
   DateTime _getNextRamadhan() {
     final now = DateTime.now();
-
-    /// 🇮🇩 Estimasi Indonesia (+1 hari)
     DateTime ramadhan = DateTime(2026, 2, 18);
 
     if (now.isAfter(ramadhan)) {
@@ -43,25 +43,7 @@ class _HomePageState extends State<HomePage> {
     return ramadhan;
   }
 
-  String formatMasehi(DateTime date) {
-    const months = [
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
-  }
-
-  String get _ramadhanHijri => '1 Ramadhan 1447 H';
+  // ===============================================
 
   void _updateCountdown() {
     setState(() {
@@ -79,21 +61,22 @@ class _HomePageState extends State<HomePage> {
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent, // ✅ hijau ikut header
-        statusBarIconBrightness: Brightness.light, // Android
-        statusBarBrightness: Brightness.dark, // iOS (ikon putih)
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
       ),
       child: Scaffold(
         backgroundColor: const Color(0xffF4F6F8),
         body: SafeArea(
-          top: false, // 🔥 PENTING
+          top: false,
           child: SingleChildScrollView(
             child: Column(
               children: [
                 /// ================= HERO HEADER =================
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(20, 56, 20, 32),
+                  padding: const EdgeInsets.only(
+                      top: 75, bottom: 20, left: 20, right: 20),
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       colors: [Color(0xff1FA37C), Color(0xff3CBFAE)],
@@ -114,7 +97,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(height: 6),
                       const Text(
-                        'Quran Tracker',
+                        'Qur’an Journey',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 24,
@@ -123,7 +106,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(height: 12),
 
-                      /// ===== RAMADHAN COUNTDOWN =====
+                      /// ===== RAMADHAN COUNTDOWN CARD =====
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(
@@ -138,22 +121,44 @@ class _HomePageState extends State<HomePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Menuju Ramadhan',
+                              'Hari ini (Hijriah)',
                               style: TextStyle(
                                 color: Colors.white70,
                                 fontSize: 13,
                               ),
                             ),
                             const SizedBox(height: 6),
+
+                            // 🔥 TANGGAL HIJRI HARI INI
                             Text(
-                              '$_ramadhanHijri • ${formatMasehi(_ramadhanDate)}',
+                              getHijriToday(),
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 15,
+                                fontSize: 16,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(height: 12),
+
+                            const SizedBox(height: 8),
+
+                            const Text(
+                              'Menuju Ramadhan',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 13,
+                              ),
+                            ),
+
+                            Text(
+                              formatMasehi(_ramadhanDate),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
+                            ),
+
+                            const SizedBox(height: 10),
+
                             Text(
                               '$days hari ${two(hours)}:${two(minutes)}',
                               style: const TextStyle(
@@ -165,7 +170,7 @@ class _HomePageState extends State<HomePage> {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 14),
 
                       /// ===== CTA =====
                       SizedBox(
@@ -175,7 +180,8 @@ class _HomePageState extends State<HomePage> {
                             backgroundColor: Colors.white,
                             foregroundColor: Colors.green,
                             elevation: 0,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            padding: const EdgeInsets.only(
+                                top: 14, bottom: 14, left: 20, right: 20),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
@@ -202,64 +208,64 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
 
-                const SizedBox(height: 0),
-
-                /// ================= MENU GRID =================
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: GridView(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
+                Transform.translate(
+                  offset: const Offset(0, -30),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: GridView(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 16,
+                        crossAxisSpacing: 16,
+                      ),
+                      children: [
+                        _MenuGrid(
+                          icon: Icons.menu_book_rounded,
+                          label: 'Catatan Qur’an',
+                          color: Colors.green,
+                          onTap: () =>
+                              Navigator.pushNamed(context, AppRoutes.quranLog),
+                        ),
+                        _MenuGrid(
+                          icon: Icons.mosque_rounded,
+                          label: 'Waktu Sholat',
+                          color: Colors.teal,
+                          onTap: () => Navigator.pushNamed(
+                              context, AppRoutes.prayerTime),
+                        ),
+                        _MenuGrid(
+                          icon: Icons.settings_rounded,
+                          label: 'Pengaturan',
+                          color: Colors.blueGrey,
+                          onTap: () =>
+                              Navigator.pushNamed(context, AppRoutes.settings),
+                        ),
+                        _MenuGrid(
+                          icon: Icons.favorite_rounded,
+                          label: 'Target Ibadah',
+                          color: Colors.deepPurple,
+                          onTap: () {},
+                        ),
+                      ],
                     ),
-                    children: [
-                      _MenuGrid(
-                        icon: Icons.menu_book_rounded,
-                        label: 'Catatan Qur’an',
-                        color: Colors.green,
-                        onTap: () =>
-                            Navigator.pushNamed(context, AppRoutes.quranLog),
-                      ),
-                      _MenuGrid(
-                        icon: Icons.mosque_rounded,
-                        label: 'Waktu Sholat',
-                        color: Colors.teal,
-                        onTap: () =>
-                            Navigator.pushNamed(context, AppRoutes.prayerTime),
-                      ),
-                      _MenuGrid(
-                        icon: Icons.settings_rounded,
-                        label: 'Pengaturan',
-                        color: Colors.blueGrey,
-                        onTap: () =>
-                            Navigator.pushNamed(context, AppRoutes.settings),
-                      ),
-                      _MenuGrid(
-                        icon: Icons.favorite_rounded,
-                        label: 'Target Ibadah',
-                        color: Colors.deepPurple,
-                        onTap: () {},
-                      ),
-                    ],
                   ),
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
               ],
             ),
           ),
         ),
+        bottomNavigationBar: MiniPlayer(),
       ),
     );
   }
 }
 
 /// ================= GRID MENU =================
-
 class _MenuGrid extends StatelessWidget {
   final IconData icon;
   final String label;
