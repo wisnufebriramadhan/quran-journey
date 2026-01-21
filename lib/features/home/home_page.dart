@@ -106,7 +106,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(height: 12),
 
-                      /// ===== RAMADHAN COUNTDOWN CARD =====
+                      /// ===== RAMADHAN COUNTDOWN CARD (2 GRID) =====
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(
@@ -117,59 +117,72 @@ class _HomePageState extends State<HomePage> {
                           color: Colors.white.withOpacity(0.18),
                           borderRadius: BorderRadius.circular(22),
                         ),
-                        child: Column(
+                        child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Hari ini (Hijriah)',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 13,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-
-                            // 🔥 TANGGAL HIJRI HARI INI
-                            Text(
-                              getHijriToday(),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-
-                            const SizedBox(height: 8),
-
-                            const Text(
-                              'Menuju Ramadhan',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 13,
+                            /// ===== KIRI: HIJRI HARI INI =====
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Text(
+                                    'Hari ini (Hijriah)',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    getHijriToday(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
 
-                            Text(
-                              formatMasehi(_ramadhanDate),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                              ),
-                            ),
+                            const SizedBox(width: 16),
 
-                            const SizedBox(height: 10),
-
-                            Text(
-                              '$days hari ${two(hours)}:${two(minutes)}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
+                            /// ===== KANAN: MENUJU RAMADHAN =====
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  const Text(
+                                    'Menuju Ramadhan',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  Text(
+                                    formatMasehi(_ramadhanDate),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '$days hari ${two(hours)}:${two(minutes)}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
+
                       const SizedBox(height: 14),
 
                       /// ===== CTA =====

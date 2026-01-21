@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:quran_tracker/core/models/surah_data.dart';
@@ -27,23 +28,37 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
   List<QuranVerse> verses = [];
   late int currentSurah;
 
-  /// 🎙 Default qari
   String currentQari = 'abdullaah_3awwaad_al-juhaynee';
 
-  /// 🎧 Available qari
   final List<String> qaris = [
     'abdullaah_3awwaad_al-juhaynee',
     'abdurrahmaan_as-sudays',
-    'mishaari_raashid_al-3afaasee',
-    'saood_al-shuraym',
+    'mishaari_raashid_al_3afaasee',
+    'bandar_baleela',
+    'yasser_ad-dussary'
   ];
+
+  StreamSubscription<ProcessingState>? _autoNextSub;
 
   @override
   void initState() {
     super.initState();
     currentSurah = widget.surah;
     _loadVerses();
-    _prepareAudioIfNeeded();
+    _prepareAudio();
+
+    /// 🔥 AUTO NEXT SURAH
+    _autoNextSub = _audio.processingStateStream.listen((ProcessingState state) {
+      if (state == ProcessingState.completed) {
+        _handleAutoNextSurah();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _autoNextSub?.cancel();
+    super.dispose();
   }
 
   /// =========================
@@ -58,7 +73,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
   /// =========================
   /// PREPARE AUDIO
   /// =========================
-  Future<void> _prepareAudioIfNeeded() async {
+  Future<void> _prepareAudio() async {
     await _audio.prepare(
       qari: currentQari,
       surah: currentSurah,
@@ -66,7 +81,22 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
   }
 
   /// =========================
-  /// ▶️ PLAY / PAUSE
+  /// AUTO NEXT SURAH
+  /// =========================
+  Future<void> _handleAutoNextSurah() async {
+    final next = await _audio.nextSurah();
+    if (next == null) return;
+
+    setState(() {
+      currentSurah = next;
+      verses.clear();
+    });
+
+    await _loadVerses();
+  }
+
+  /// =========================
+  /// PLAY / PAUSE
   /// =========================
   Future<void> _togglePlay() async {
     final state = _audio.player.playerState;
@@ -79,7 +109,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
   }
 
   /// =========================
-  /// 🎙 PICK QARI
+  /// PICK QARI
   /// =========================
   Future<void> _pickQari() async {
     final selected = await showModalBottomSheet<String>(
@@ -108,7 +138,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
   }
 
   /// =========================
-  /// 📖 PICK SURAH
+  /// PICK SURAH (MANUAL)
   /// =========================
   Future<void> _pickSurah() async {
     final selected = await showModalBottomSheet<int>(
@@ -169,8 +199,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
                 /// ================= AYAT =================
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.only(
-                        left: 20, right: 20, top: 12, bottom: 12),
+                    padding: const EdgeInsets.all(20),
                     child: Directionality(
                       textDirection: TextDirection.rtl,
                       child: RichText(
@@ -199,7 +228,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
                   ),
                 ),
 
-                /// ================= AUDIO =================
+                /// ================= AUDIO CONTROL =================
                 Container(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
                   decoration: BoxDecoration(
@@ -231,22 +260,58 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
                           );
                         },
                       ),
-                      IconButton(
-                        iconSize: 44,
-                        icon: StreamBuilder<PlayerState>(
-                          stream: player.playerStateStream,
-                          builder: (_, snap) {
-                            final playing = snap.data?.playing ?? false;
-                            return Icon(
-                              playing
-                                  ? Icons.pause_circle_filled
-                                  : Icons.play_circle_filled,
-                              color: Colors.green,
-                            );
-                          },
-                        ),
-                        onPressed: _togglePlay,
+
+                      /// 🔥 PREV / PLAY / NEXT
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            iconSize: 36,
+                            icon: const Icon(Icons.skip_previous),
+                            onPressed: () async {
+                              final prev = await _audio.prevSurah();
+                              if (prev == null) return;
+
+                              setState(() {
+                                currentSurah = prev;
+                                verses.clear();
+                              });
+                              await _loadVerses();
+                            },
+                          ),
+                          IconButton(
+                            iconSize: 48,
+                            icon: StreamBuilder<PlayerState>(
+                              stream: player.playerStateStream,
+                              builder: (_, snap) {
+                                final playing = snap.data?.playing ?? false;
+                                return Icon(
+                                  playing
+                                      ? Icons.pause_circle_filled
+                                      : Icons.play_circle_filled,
+                                  color: Colors.green,
+                                );
+                              },
+                            ),
+                            onPressed: _togglePlay,
+                          ),
+                          IconButton(
+                            iconSize: 36,
+                            icon: const Icon(Icons.skip_next),
+                            onPressed: () async {
+                              final next = await _audio.nextSurah();
+                              if (next == null) return;
+
+                              setState(() {
+                                currentSurah = next;
+                                verses.clear();
+                              });
+                              await _loadVerses();
+                            },
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 6),
                       Text(
                         currentQari.replaceAll('_', ' '),
                         style: const TextStyle(
@@ -262,7 +327,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
 }
 
 /// =========================
-/// 🔢 NOMOR AYAT (ARABIC)
+/// AYAH NUMBER
 /// =========================
 class AyahNumber extends StatelessWidget {
   final int number;
@@ -274,8 +339,7 @@ class AyahNumber extends StatelessWidget {
     return Transform.translate(
       offset: const Offset(0, -1.8),
       child: Container(
-        padding: const EdgeInsets.only(left: 10, right: 10, top: 0, bottom: 8),
-        transformAlignment: AlignmentDirectional.center,
+        padding: const EdgeInsets.only(left: 10, right: 10, bottom: 8),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(color: Colors.black54),
@@ -294,9 +358,6 @@ class AyahNumber extends StatelessWidget {
   }
 }
 
-/// =========================
-/// 🔤 ANGKA ARAB
-/// =========================
 String toArabicNumber(int number) {
   const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
   return number

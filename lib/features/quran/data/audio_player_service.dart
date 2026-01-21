@@ -1,8 +1,7 @@
 import 'package:just_audio/just_audio.dart';
 
 class AudioPlayerService {
-  static final AudioPlayerService _instance =
-      AudioPlayerService._internal();
+  static final AudioPlayerService _instance = AudioPlayerService._internal();
 
   factory AudioPlayerService() => _instance;
   AudioPlayerService._internal();
@@ -12,22 +11,26 @@ class AudioPlayerService {
   String? currentQari;
   int? currentSurah;
 
+  /// =========================
+  /// GETTERS
+  /// =========================
   AudioPlayer get player => _player;
 
   bool get isPlaying => _player.playing;
 
+  /// 🔔 expose processing state (untuk auto-next)
+  Stream<ProcessingState> get processingStateStream =>
+      _player.processingStateStream;
+
   /// =========================
-  /// PREPARE (SET URL ONLY)
-  /// - Tidak reset kalau qari & surah sama
+  /// PREPARE AUDIO
+  /// - tidak reload jika qari & surah sama
   /// =========================
   Future<void> prepare({
     required String qari,
     required int surah,
   }) async {
-    // 🛑 Jangan reload audio kalau masih sama
-    if (currentQari == qari && currentSurah == surah) {
-      return;
-    }
+    if (currentQari == qari && currentSurah == surah) return;
 
     currentQari = qari;
     currentSurah = surah;
@@ -38,49 +41,66 @@ class AudioPlayerService {
     await _player.setUrl(url);
   }
 
-  /// ▶️ PLAY
+  /// =========================
+  /// PLAY / PAUSE / STOP
+  /// =========================
   Future<void> play() async {
     if (!_player.playing) {
       await _player.play();
     }
   }
 
-  /// ⏸ PAUSE
   Future<void> pause() async {
     if (_player.playing) {
       await _player.pause();
     }
   }
 
-  /// ⏹ STOP (jarang dipakai)
   Future<void> stop() async {
     await _player.stop();
   }
 
-  /// ⏩ SEEK (untuk progress bar nanti)
+  /// =========================
+  /// SEEK
+  /// =========================
   Future<void> seek(Duration position) async {
     await _player.seek(position);
   }
 
-  /// 🔁 NEXT SURAH
-  Future<void> nextSurah() async {
-    if (currentQari == null || currentSurah == null) return;
+  /// =========================
+  /// NEXT SURAH
+  /// =========================
+  Future<int?> nextSurah() async {
+    if (currentQari == null || currentSurah == null) return null;
 
     int next = currentSurah! + 1;
     if (next > 114) next = 1;
 
     await prepare(qari: currentQari!, surah: next);
     await play();
+
+    return next;
   }
 
-  /// ⏮ PREVIOUS SURAH
-  Future<void> prevSurah() async {
-    if (currentQari == null || currentSurah == null) return;
+  /// =========================
+  /// PREVIOUS SURAH
+  /// =========================
+  Future<int?> prevSurah() async {
+    if (currentQari == null || currentSurah == null) return null;
 
     int prev = currentSurah! - 1;
     if (prev < 1) prev = 114;
 
     await prepare(qari: currentQari!, surah: prev);
     await play();
+
+    return prev;
+  }
+
+  /// =========================
+  /// DISPOSE (kalau perlu)
+  /// =========================
+  Future<void> dispose() async {
+    await _player.dispose();
   }
 }
