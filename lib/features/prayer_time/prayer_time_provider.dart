@@ -61,4 +61,49 @@ class PrayerTimeProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  /// ================= NEXT PRAYER HELPERS =================
+
+  DateTime? get nextPrayerTime {
+    if (prayerTimes == null || nextPrayer == null) return null;
+
+    switch (nextPrayer!) {
+      case Prayer.fajr:
+        return prayerTimes!.fajr;
+      case Prayer.dhuhr:
+        return prayerTimes!.dhuhr;
+      case Prayer.asr:
+        return prayerTimes!.asr;
+      case Prayer.maghrib:
+        return prayerTimes!.maghrib;
+      case Prayer.isha:
+        return prayerTimes!.isha;
+      default:
+        return null;
+    }
+  }
+
+  String? get nextPrayerName {
+    if (nextPrayer == null) return null;
+
+    switch (nextPrayer!) {
+      case Prayer.fajr:
+        return 'Subuh';
+      case Prayer.dhuhr:
+        return 'Dzuhur';
+      case Prayer.asr:
+        return 'Ashar';
+      case Prayer.maghrib:
+        return 'Maghrib';
+      case Prayer.isha:
+        return 'Isya';
+      default:
+        return null;
+    }
+  }
+
+  Duration get remainingToNextPrayer {
+    if (nextPrayerTime == null) return Duration.zero;
+    return nextPrayerTime!.difference(DateTime.now());
+  }
 }

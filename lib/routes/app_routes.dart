@@ -7,4 +7,5 @@ class AppRoutes {
   static const prayerTime = '/prayer-time';
   static const settings = '/settings';
   static const quranAudio = '/quran-audio';
+  static const mushafDigital = '/mushaf-digital';
 }

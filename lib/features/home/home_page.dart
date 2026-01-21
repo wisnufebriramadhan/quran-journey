@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+
 import 'package:quran_tracker/features/extentions.dart';
 import 'package:quran_tracker/features/quran/presentation/quran_reader_page.dart';
 import 'package:quran_tracker/features/quran_log/presentation/widgets/mini_player.dart';
+import 'package:quran_tracker/features/prayer_time/prayer_time_provider.dart';
 import '../../routes/app_routes.dart';
 
 class HomePage extends StatefulWidget {
@@ -36,14 +39,11 @@ class _HomePageState extends State<HomePage> {
   DateTime _getNextRamadhan() {
     final now = DateTime.now();
     DateTime ramadhan = DateTime(2026, 2, 18);
-
     if (now.isAfter(ramadhan)) {
       ramadhan = DateTime(2027, 2, 8);
     }
     return ramadhan;
   }
-
-  // ===============================================
 
   void _updateCountdown() {
     setState(() {
@@ -52,6 +52,18 @@ class _HomePageState extends State<HomePage> {
   }
 
   String two(int n) => n.toString().padLeft(2, '0');
+
+  String formatDuration(Duration d) {
+    if (d.isNegative) return 'Sekarang';
+    final h = d.inHours;
+    final m = d.inMinutes.remainder(60);
+    return h > 0 ? '$h jam $m menit' : '$m menit';
+  }
+
+  String formatTime(DateTime t) {
+    return '${t.hour.toString().padLeft(2, '0')}:'
+        '${t.minute.toString().padLeft(2, '0')}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,14 +84,17 @@ class _HomePageState extends State<HomePage> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                /// ================= HERO HEADER =================
+                /// ================= HEADER =================
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.only(
                       top: 75, bottom: 20, left: 20, right: 20),
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [Color(0xff1FA37C), Color(0xff3CBFAE)],
+                      colors: [
+                        Color(0xFF5D4037),
+                        Color.fromARGB(255, 103, 74, 65)
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -106,7 +121,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(height: 12),
 
-                      /// ===== RAMADHAN COUNTDOWN CARD (2 GRID) =====
+                      /// ===== CARD HIJRI + RAMADHAN =====
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(
@@ -118,13 +133,10 @@ class _HomePageState extends State<HomePage> {
                           borderRadius: BorderRadius.circular(22),
                         ),
                         child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            /// ===== KIRI: HIJRI HARI INI =====
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   const Text(
                                     'Hari ini (Hijriah)',
@@ -145,10 +157,6 @@ class _HomePageState extends State<HomePage> {
                                 ],
                               ),
                             ),
-
-                            const SizedBox(width: 16),
-
-                            /// ===== KANAN: MENUJU RAMADHAN =====
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -183,6 +191,75 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
 
+                      const SizedBox(height: 12),
+
+                      /// ===== CARD PENGINGAT SHOLAT (TERPISAH) =====
+                      Consumer<PrayerTimeProvider>(
+                        builder: (context, prayer, _) {
+                          if (prayer.nextPrayerName == null ||
+                              prayer.nextPrayerTime == null) {
+                            return const SizedBox.shrink();
+                          }
+
+                          return Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.18),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white.withOpacity(0.25),
+                                  ),
+                                  child: const Icon(
+                                    Icons.notifications_active_rounded,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Pengingat Sholat Berikutnya',
+                                        style: TextStyle(
+                                          color: Colors.white70,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${prayer.nextPrayerName} • ${formatTime(prayer.nextPrayerTime!)}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  formatDuration(prayer.remainingToNextPrayer),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+
                       const SizedBox(height: 14),
 
                       /// ===== CTA =====
@@ -191,26 +268,24 @@ class _HomePageState extends State<HomePage> {
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
-                            foregroundColor: Colors.green,
+                            foregroundColor: const Color(0xFF5D4037),
                             elevation: 0,
-                            padding: const EdgeInsets.only(
-                                top: 14, bottom: 14, left: 20, right: 20),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
                           ),
                           icon: const Icon(Icons.menu_book),
                           label: const Text(
-                            'Baca Al-Qur’an Sekarang',
+                            'Dengar Murattal',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           onPressed: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => const QuranReaderPage(
+                                builder: (_) => const QuranAudioPlayerPage(
                                   surah: 1,
-                                  startingVerse: 1,
                                 ),
                               ),
                             );
@@ -236,32 +311,33 @@ class _HomePageState extends State<HomePage> {
                       ),
                       children: [
                         _MenuGrid(
-                          icon: Icons.menu_book_rounded,
+                          icon: Icons.menu_book_outlined,
+                          label: 'Mushaf',
+                          color: Colors.brown,
+                          onTap: () => Navigator.pushNamed(
+                              context, AppRoutes.mushafDigital),
+                        ),
+                        _MenuGrid(
+                          icon: Icons.notes,
                           label: 'Catatan Qur’an',
-                          color: Colors.green,
+                          color: Colors.brown,
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.quranLog),
                         ),
                         _MenuGrid(
                           icon: Icons.mosque_rounded,
                           label: 'Waktu Sholat',
-                          color: Colors.teal,
+                          color: Colors.brown,
                           onTap: () => Navigator.pushNamed(
                               context, AppRoutes.prayerTime),
                         ),
                         _MenuGrid(
                           icon: Icons.settings_rounded,
                           label: 'Pengaturan',
-                          color: Colors.blueGrey,
+                          color: Colors.brown,
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.settings),
-                        ),
-                        _MenuGrid(
-                          icon: Icons.favorite_rounded,
-                          label: 'Target Ibadah',
-                          color: Colors.deepPurple,
-                          onTap: () {},
-                        ),
+                        ),                        
                       ],
                     ),
                   ),

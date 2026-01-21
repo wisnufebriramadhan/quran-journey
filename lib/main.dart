@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:quran_tracker/features/quran/presentation/mushaf_page_view.dart';
 
 // ===== CORE =====
 import 'core/constants/app_theme.dart';
@@ -83,6 +84,7 @@ class QuranTrackerApp extends StatelessWidget {
           AppRoutes.quranLog: (_) => const QuranLogPage(),
           AppRoutes.prayerTime: (_) => const PrayerTimePage(),
           AppRoutes.settings: (_) => const PrayerSettingsPage(),
+          AppRoutes.mushafDigital: (context) => const MushafPageView(initialPage: 1)
         },
       ),
     );

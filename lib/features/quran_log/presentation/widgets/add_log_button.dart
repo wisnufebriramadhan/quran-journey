@@ -25,9 +25,8 @@ class AddLogButton extends StatelessWidget {
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor:
-                isDisabled ? Colors.grey.shade300 : Colors.green,
-            foregroundColor:
-                isDisabled ? Colors.grey.shade700 : Colors.white,
+                isDisabled ? Colors.grey.shade300 : const Color(0xFF5D4037),
+            foregroundColor: isDisabled ? Colors.grey.shade700 : Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),

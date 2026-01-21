@@ -43,15 +43,15 @@ class _QuranLogCalendarState extends State<QuranLogCalendar> {
       },
       calendarStyle: CalendarStyle(
         markerDecoration: const BoxDecoration(
-          color: Colors.green,
+          color: Colors.brown,
           shape: BoxShape.circle,
         ),
         todayDecoration: BoxDecoration(
-          color: Colors.green.withOpacity(0.3),
+          color: Colors.brown.withOpacity(0.3),
           shape: BoxShape.circle,
         ),
         selectedDecoration: const BoxDecoration(
-          color: Colors.green,
+          color: Colors.brown,
           shape: BoxShape.circle,
         ),
       ),

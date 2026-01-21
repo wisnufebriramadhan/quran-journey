@@ -1,15 +1,72 @@
 import 'package:just_audio/just_audio.dart';
+import 'package:audio_session/audio_session.dart';
+import 'dart:async';
 
 class AudioPlayerService {
   static final AudioPlayerService _instance = AudioPlayerService._internal();
 
   factory AudioPlayerService() => _instance;
-  AudioPlayerService._internal();
+  
+  AudioPlayerService._internal() {
+    _initAudioSession();
+    _setupAutoNext();
+  }
 
   final AudioPlayer _player = AudioPlayer();
+  StreamSubscription<ProcessingState>? _autoNextSub;
 
   String? currentQari;
   int? currentSurah;
+
+  /// 🔥 Callback untuk notify UI bahwa surah berganti
+  Function(int newSurah)? onSurahChanged;
+
+  /// =========================
+  /// 🔥 INIT AUDIO SESSION
+  /// =========================
+  Future<void> _initAudioSession() async {
+    final session = await AudioSession.instance;
+    await session.configure(const AudioSessionConfiguration(
+      avAudioSessionCategory: AVAudioSessionCategory.playback,
+      avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.duckOthers,
+      avAudioSessionMode: AVAudioSessionMode.spokenAudio,
+      avAudioSessionRouteSharingPolicy: AVAudioSessionRouteSharingPolicy.defaultPolicy,
+      avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
+      androidAudioAttributes: AndroidAudioAttributes(
+        contentType: AndroidAudioContentType.speech,
+        flags: AndroidAudioFlags.none,
+        usage: AndroidAudioUsage.media,
+      ),
+      androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+      androidWillPauseWhenDucked: true,
+    ));
+  }
+
+  /// =========================
+  /// 🔥 SETUP AUTO NEXT
+  /// =========================
+  void _setupAutoNext() {
+    _autoNextSub = _player.processingStateStream.listen((state) {
+      if (state == ProcessingState.completed) {
+        _handleAutoNext();
+      }
+    });
+  }
+
+  /// =========================
+  /// 🔥 HANDLE AUTO NEXT
+  /// =========================
+  Future<void> _handleAutoNext() async {
+    if (currentQari == null || currentSurah == null) return;
+
+    int next = currentSurah! + 1;
+    if (next > 114) next = 1;
+
+    await prepare(qari: currentQari!, surah: next);
+    await play();
+
+    onSurahChanged?.call(next);
+  }
 
   /// =========================
   /// GETTERS
@@ -18,17 +75,20 @@ class AudioPlayerService {
 
   bool get isPlaying => _player.playing;
 
-  /// 🔔 expose processing state (untuk auto-next)
   Stream<ProcessingState> get processingStateStream =>
       _player.processingStateStream;
+      
+  Stream<Duration> get positionStream => _player.positionStream;
+      
+  Stream<PlayerState> get playerStateStream => _player.playerStateStream;
 
   /// =========================
   /// PREPARE AUDIO
-  /// - tidak reload jika qari & surah sama
   /// =========================
   Future<void> prepare({
     required String qari,
     required int surah,
+    String? surahName,
   }) async {
     if (currentQari == qari && currentSurah == surah) return;
 
@@ -98,9 +158,10 @@ class AudioPlayerService {
   }
 
   /// =========================
-  /// DISPOSE (kalau perlu)
+  /// DISPOSE
   /// =========================
   Future<void> dispose() async {
+    await _autoNextSub?.cancel();
     await _player.dispose();
   }
 }

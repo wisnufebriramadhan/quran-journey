@@ -200,13 +200,13 @@ class _PrayerTimePageState extends State<PrayerTimePage> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         gradient: const LinearGradient(
-          colors: [Color(0xFF3A7D44), Color(0xFF6FBF73)],
-          begin: Alignment.topLeft,
+          colors: [Color(0xFF86665D), Color(0xFF5D4037)],
+          begin: Alignment.topCenter,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withOpacity(0.25),
+            color: Colors.brown.withOpacity(0.25),
             blurRadius: 16,
             offset: const Offset(0, 8),
           ),

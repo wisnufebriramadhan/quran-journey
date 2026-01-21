@@ -12,17 +12,16 @@ class MiniPlayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<PlayerState>(
-      stream: audio.player.playerStateStream,
+      stream: audio.playerStateStream,
       builder: (context, snapshot) {
         final state = snapshot.data;
         final isPlaying = state?.playing ?? false;
 
-        // Jangan tampil kalau belum siap
-        if (state == null || audio.player.duration == null) {
+        if (state == null || audio.currentSurah == null) {
           return const SizedBox.shrink();
         }
 
-        final currentSurah = audio.currentSurah ?? 1;
+        final currentSurah = audio.currentSurah!;
         final surahInfo = SurahData.byNumber(currentSurah);
 
         return GestureDetector(
@@ -30,9 +29,8 @@ class MiniPlayer extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => QuranReaderPage(
+                builder: (_) => QuranAudioPlayerPage(
                   surah: currentSurah,
-                  startingVerse: 1,
                 ),
               ),
             );
@@ -56,10 +54,8 @@ class MiniPlayer extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(Icons.menu_book, color: Colors.green, size: 28),
+                const Icon(Icons.menu_book, color: Colors.brown, size: 28),
                 const SizedBox(width: 10),
-
-                /// INFO SURAH + QARI
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -97,10 +93,8 @@ class MiniPlayer extends StatelessWidget {
                           ),
                         ],
                       ),
-
-                      /// MINI PROGRESS BAR
                       StreamBuilder<Duration>(
-                        stream: audio.player.positionStream,
+                        stream: audio.positionStream,
                         builder: (_, snap) {
                           final pos = snap.data ?? Duration.zero;
                           final dur = audio.player.duration ?? Duration.zero;
@@ -110,23 +104,21 @@ class MiniPlayer extends StatelessWidget {
                                 : (pos.inMilliseconds / dur.inMilliseconds)
                                     .clamp(0, 1),
                             minHeight: 2,
-                            backgroundColor: Colors.green.withOpacity(0.2),
-                            color: Colors.green,
+                            backgroundColor: Colors.brown.withOpacity(0.2),
+                            color: Colors.brown,
                           );
                         },
                       ),
                     ],
                   ),
                 ),
-
-                /// PLAY / PAUSE
                 IconButton(
                   iconSize: 32,
                   icon: Icon(
                     isPlaying
                         ? Icons.pause_circle_filled
                         : Icons.play_circle_filled,
-                    color: Colors.green,
+                    color: Colors.brown,
                   ),
                   onPressed: () {
                     if (isPlaying) {
