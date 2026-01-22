@@ -4,8 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'package:quran_tracker/features/extentions.dart';
-import 'package:quran_tracker/features/quran/presentation/quran_reader_page.dart';
-import 'package:quran_tracker/features/quran_log/presentation/widgets/mini_player.dart';
+import 'package:quran_tracker/features/quran/presentation/quran_audio_player_page.dart';
 import 'package:quran_tracker/features/prayer_time/prayer_time_provider.dart';
 import '../../routes/app_routes.dart';
 
@@ -277,7 +276,7 @@ class _HomePageState extends State<HomePage> {
                           ),
                           icon: const Icon(Icons.menu_book),
                           label: const Text(
-                            'Dengar Murattal',
+                            'Murattal',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           onPressed: () {
@@ -285,7 +284,8 @@ class _HomePageState extends State<HomePage> {
                               context,
                               MaterialPageRoute(
                                 builder: (_) => const QuranAudioPlayerPage(
-                                  surah: 1,
+                                  initialSurah:
+                                      1, // default hanya untuk FIRST entry
                                 ),
                               ),
                             );
@@ -337,7 +337,7 @@ class _HomePageState extends State<HomePage> {
                           color: Colors.brown,
                           onTap: () =>
                               Navigator.pushNamed(context, AppRoutes.settings),
-                        ),                        
+                        ),
                       ],
                     ),
                   ),
@@ -348,7 +348,6 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ),
-        bottomNavigationBar: MiniPlayer(),
       ),
     );
   }

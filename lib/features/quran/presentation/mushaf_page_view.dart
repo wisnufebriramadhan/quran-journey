@@ -22,6 +22,10 @@ class _MushafPageViewState extends State<MushafPageView> {
   int currentPage = 1;
   String? currentSurahTitle;
 
+  // 🎨 COLOR SYSTEM (MUSHAF BROWN)
+  static const bgPaper = Color(0xFFF4EFE6);
+  static const appBarBrown = Color(0xFF4A3322);
+
   @override
   void initState() {
     super.initState();
@@ -49,11 +53,12 @@ class _MushafPageViewState extends State<MushafPageView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F1E8),
+      backgroundColor: bgPaper,
       appBar: AppBar(
-        backgroundColor: Colors.brown.shade700,
+        backgroundColor: appBarBrown,
         foregroundColor: Colors.white,
         centerTitle: true,
+        elevation: 2,
         title: Column(
           children: [
             Text(
@@ -62,6 +67,7 @@ class _MushafPageViewState extends State<MushafPageView> {
                 fontFamily: 'UthmaniHafs',
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
               ),
             ),
           ],
@@ -82,6 +88,8 @@ class _MushafPageViewState extends State<MushafPageView> {
           ),
         ],
       ),
+
+      /// 📖 PAGE VIEW
       body: PageView.builder(
         controller: _pageController,
         reverse: true,
@@ -98,16 +106,15 @@ class _MushafPageViewState extends State<MushafPageView> {
           );
         },
       ),
+
+      /// 🔢 BOTTOM INFO
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
-            ),
-          ],
+          color: const Color(0xFFFAF7F2),
+          border: Border(
+            top: BorderSide(color: Colors.brown.shade200),
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -117,12 +124,13 @@ class _MushafPageViewState extends State<MushafPageView> {
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 16,
+                color: Colors.black87,
               ),
             ),
             Text(
               'جزء ${((currentPage - 1) ~/ 20) + 1}',
               style: TextStyle(
-                color: Colors.grey.shade700,
+                color: Colors.brown.shade600,
                 fontSize: 14,
               ),
             ),
@@ -139,12 +147,13 @@ class _MushafPageViewState extends State<MushafPageView> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: bgPaper,
           title: const Text('Loncat ke Halaman'),
           content: TextField(
             controller: controller,
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(
-              hintText: 'Masukkan nomor halaman (1–604)',
+              hintText: '1 – 604',
               border: OutlineInputBorder(),
             ),
             autofocus: true,
@@ -155,6 +164,9 @@ class _MushafPageViewState extends State<MushafPageView> {
               child: const Text('Batal'),
             ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: appBarBrown,
+              ),
               onPressed: () {
                 final page = int.tryParse(controller.text);
                 if (page != null && page >= 1 && page <= 604) {
@@ -172,7 +184,7 @@ class _MushafPageViewState extends State<MushafPageView> {
 }
 
 /// =======================
-/// WIDGET HALAMAN MUSHAF
+/// 📄 WIDGET HALAMAN MUSHAF
 /// =======================
 class MushafPageWidget extends StatelessWidget {
   final int pageNumber;
@@ -184,6 +196,9 @@ class MushafPageWidget extends StatelessWidget {
     required this.pageService,
   });
 
+  static const accentBrown = Color(0xFF8B5E3C);
+  static const goldBrown = Color(0xFFC8A45D);
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<QuranVerse>>(
@@ -191,7 +206,7 @@ class MushafPageWidget extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
-            child: CircularProgressIndicator(color: Colors.brown),
+            child: CircularProgressIndicator(color: accentBrown),
           );
         }
 
@@ -205,20 +220,21 @@ class MushafPageWidget extends StatelessWidget {
         }
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(22),
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
           child: Directionality(
             textDirection: TextDirection.rtl,
             child: Column(
               children: [
-                if (_isStartOfSurah(verses.first))
-                  _buildSurahHeader(verses.first),
-                if (_needsBismillah(verses.first)) _buildBismillah(),
+                // if (_isStartOfSurah(verses.first))
+                //   _buildSurahHeader(verses.first),
+                // if (_isStartOfSurah(verses.first))
+                //   _buildBismillah(verses.first.surah),
                 _buildVerses(verses),
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
                 Text(
                   pageNumber.toString(),
                   style: TextStyle(
-                    color: Colors.grey.shade600,
+                    color: Colors.brown.shade500,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -232,19 +248,18 @@ class MushafPageWidget extends StatelessWidget {
 
   bool _isStartOfSurah(QuranVerse verse) => verse.ayah == 1;
 
-  bool _needsBismillah(QuranVerse verse) {
-    return verse.ayah == 1 && verse.surah != 1 && verse.surah != 9;
-  }
+  bool _needsBismillah(QuranVerse verse) =>
+      verse.ayah == 1 && verse.surah != 1 && verse.surah != 9;
 
   Widget _buildSurahHeader(QuranVerse verse) {
     final surah = SurahData.byNumber(verse.surah);
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(vertical: 18),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.brown.shade300, width: 2),
+        color: const Color(0xFFFBF8F3),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: goldBrown, width: 1.8),
       ),
       child: Column(
         children: [
@@ -252,30 +267,36 @@ class MushafPageWidget extends StatelessWidget {
             'سورة ${surah.arabic}',
             style: const TextStyle(
               fontFamily: 'UthmaniHafs',
-              fontSize: 24,
+              fontSize: 26,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             surah.latin,
-            style: TextStyle(color: Colors.grey.shade700),
+            style: TextStyle(color: Colors.brown.shade600),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBismillah() {
-    return const Padding(
-      padding: EdgeInsets.only(bottom: 20),
-      child: Text(
+  Widget _buildBismillah(int surahNumber) {
+    // Surah 1 (Al-Fatihah) dan 9 (At-Taubah) tidak butuh header Bismillah tambahan
+    // Al-Fatihah karena Bismillah adalah ayat ke-1, At-Taubah memang tidak ada Bismillah.
+    if (surahNumber == 1 || surahNumber == 9) {
+      return const SizedBox.shrink();
+    }
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(top: 0, bottom: 8),
+      child: const Text(
         'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ',
         textAlign: TextAlign.center,
         style: TextStyle(
           fontFamily: 'UthmaniHafs',
           fontSize: 28,
-          height: 2,
+          height: 1.5,
         ),
       ),
     );
@@ -284,26 +305,120 @@ class MushafPageWidget extends StatelessWidget {
   Widget _buildVerses(List<QuranVerse> verses) {
     return RichText(
       textDirection: TextDirection.rtl,
-      textAlign: TextAlign.justify,
+      textAlign: TextAlign.center,
       text: TextSpan(
         style: const TextStyle(
           fontFamily: 'UthmaniHafs',
           fontSize: 26,
-          height: 2.2,
+          height: 2.25,
           color: Colors.black87,
         ),
         children: verses.expand((v) {
-          return [
-            TextSpan(text: v.text),
-            const TextSpan(text: ' '),
+          final spans = <InlineSpan>[];
+
+          // ✅ JIKA AWAL SURAH (DI MANA PUN POSISINYA)
+          if (v.ayah == 1) {
+            final surah = SurahData.byNumber(v.surah);
+
+            // 🕌 DIVIDER ALA MUSHAF MADINAH
+            spans.add(
+              WidgetSpan(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 0),
+                  child: Column(
+                    children: [
+                      const Row(
+                        children: [
+                          Expanded(
+                            child: Divider(
+                              color: Color(0xFFD8C3A5),
+                              thickness: 1,
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 12),
+                            child: Icon(
+                              Icons.local_florist,
+                              size: 18,
+                              color: Color(0xFFC8A45D),
+                            ),
+                          ),
+                          Expanded(
+                            child: Divider(
+                              color: Color(0xFFD8C3A5),
+                              thickness: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      // 📜 HEADER SURAH
+                      Text(
+                        'سورة ${surah.arabic}',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: 'UthmaniHafs',
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF8B5E3C),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        surah.latin,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.brown.shade600,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Row(
+                        children: [
+                          Expanded(
+                            child: Divider(
+                              color: Color(0xFFD8C3A5),
+                              thickness: 1,
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 12),
+                            child: Icon(
+                              Icons.local_florist,
+                              size: 18,
+                              color: Color(0xFFC8A45D),
+                            ),
+                          ),
+                          Expanded(
+                            child: Divider(
+                              color: Color(0xFFD8C3A5),
+                              thickness: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      _buildBismillah(verses.first.surah),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
+
+          // 📖 AYAT
+          spans.add(TextSpan(text: v.text));
+          spans.add(const TextSpan(text: ' '));
+          spans.add(
             TextSpan(
               text: '﴿${_toArabicNumber(v.ayah)}﴾ ',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 20,
-                color: Colors.brown.shade700,
+                color: accentBrown,
               ),
             ),
-          ];
+          );
+
+          return spans;
         }).toList(),
       ),
     );
