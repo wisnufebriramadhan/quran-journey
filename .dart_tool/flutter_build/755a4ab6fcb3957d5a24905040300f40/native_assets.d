@@ -1,0 +1,1 @@
+ /Users/lintasarta/quran_tracker/.dart_tool/flutter_build/755a4ab6fcb3957d5a24905040300f40/native_assets.yaml: 
