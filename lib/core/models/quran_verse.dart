@@ -4,9 +4,9 @@ class QuranVerse {
   final int surah;
   final int ayah;
   final String text;
-  final int? page; // 👈 Tambahkan
-  final int? juz; // 👈 Tambahkan
-  final int? hizbQuarter; // 👈 Tambahkan (optional)
+  final int? page;
+  final int? juz;
+  final int? hizbQuarter;
 
   QuranVerse({
     required this.surah,
@@ -25,9 +25,24 @@ class QuranVerse {
       surah: int.parse(parts[0]),
       ayah: int.parse(parts[1]),
       text: json['text_uthmani'],
-      page: json['page_number'], // 👈 Tambahkan
-      juz: json['juz_number'], // 👈 Tambahkan
-      hizbQuarter: json['hizb_number'], // 👈 Tambahkan (optional)
+      page: json['page_number'],
+      juz: json['juz_number'],
+      hizbQuarter: json['hizb_number'],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'verse_key': '$surah:$ayah',
+      'text_uthmani': text,
+      'page_number': page,
+      'juz_number': juz,
+      'hizb_number': hizbQuarter,
+    };
+  }
+
+  @override
+  String toString() {
+    return 'QuranVerse(surah: $surah, ayah: $ayah, page: $page, juz: $juz)';
   }
 }

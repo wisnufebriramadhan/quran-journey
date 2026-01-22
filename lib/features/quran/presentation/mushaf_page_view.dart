@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../core/models/quran_verse.dart';
 import '../../../core/models/surah_data.dart';
 import '../data/quran_page_service.dart';
+import '../data/quran_download_service.dart';
+import '../data/download_quran_dialog.dart';
 
 class MushafPageView extends StatefulWidget {
   final int initialPage;
@@ -17,14 +19,18 @@ class MushafPageView extends StatefulWidget {
 
 class _MushafPageViewState extends State<MushafPageView> {
   final QuranPageService _pageService = QuranPageService();
+  final QuranDownloadService _downloadService = QuranDownloadService();
   late PageController _pageController;
 
   int currentPage = 1;
   String? currentSurahTitle;
+  bool _isDataDownloaded = false;
 
-  // 🎨 COLOR SYSTEM (MUSHAF BROWN)
-  static const bgPaper = Color(0xFFF4EFE6);
-  static const appBarBrown = Color(0xFF4A3322);
+  // 🎨 ENHANCED COLOR SYSTEM
+  static const bgPaper = Color(0xFFFAF8F3);
+  static const appBarBrown = Color(0xFF2C1810);
+  static const accentGold = Color(0xFFD4AF37);
+  static const textPrimary = Color(0xFF1A1A1A);
 
   @override
   void initState() {
@@ -32,12 +38,22 @@ class _MushafPageViewState extends State<MushafPageView> {
     currentPage = widget.initialPage;
     _pageController = PageController(initialPage: widget.initialPage - 1);
     _loadSurahTitle(widget.initialPage);
+    _checkDownloadStatus();
   }
 
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkDownloadStatus() async {
+    final isDownloaded = await _pageService.isDataDownloaded();
+    if (mounted) {
+      setState(() {
+        _isDataDownloaded = isDownloaded;
+      });
+    }
   }
 
   Future<void> _loadSurahTitle(int page) async {
@@ -56,88 +72,322 @@ class _MushafPageViewState extends State<MushafPageView> {
       backgroundColor: bgPaper,
       appBar: AppBar(
         backgroundColor: appBarBrown,
-        foregroundColor: Colors.white,
+        foregroundColor: accentGold,
         centerTitle: true,
-        elevation: 2,
+        elevation: 0,
         title: Column(
           children: [
             Text(
               currentSurahTitle ?? 'المصحف الشريف',
               style: const TextStyle(
                 fontFamily: 'UthmaniHafs',
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 1.2,
+                color: accentGold,
               ),
             ),
           ],
         ),
         actions: [
+          if (!_isDataDownloaded)
+            IconButton(
+              icon: const Icon(Icons.cloud_download, color: accentGold),
+              onPressed: _showDownloadDialog,
+              tooltip: 'Download untuk offline',
+            ),
+          if (_isDataDownloaded)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Center(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: accentGold.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: accentGold.withOpacity(0.3)),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.offline_bolt, size: 14, color: accentGold),
+                      SizedBox(width: 4),
+                      Text(
+                        'Offline',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: accentGold,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.search, color: accentGold),
             onPressed: _showJumpToPage,
             tooltip: 'Loncat ke halaman',
           ),
-          IconButton(
-            icon: const Icon(Icons.bookmark_border),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Fitur bookmark segera hadir')),
-              );
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: accentGold),
+            onSelected: (value) {
+              if (value == 'download') {
+                _showDownloadDialog();
+              } else if (value == 'clear') {
+                _showClearDataDialog();
+              }
             },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'download',
+                child: Row(
+                  children: [
+                    Icon(
+                      _isDataDownloaded ? Icons.refresh : Icons.cloud_download,
+                      size: 20,
+                      color: appBarBrown,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(_isDataDownloaded ? 'Update Data' : 'Download Data'),
+                  ],
+                ),
+              ),
+              if (_isDataDownloaded)
+                const PopupMenuItem(
+                  value: 'clear',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline, size: 20, color: Colors.red),
+                      SizedBox(width: 12),
+                      Text('Hapus Data Offline'),
+                    ],
+                  ),
+                ),
+            ],
           ),
         ],
       ),
 
-      /// 📖 PAGE VIEW
-      body: PageView.builder(
-        controller: _pageController,
-        reverse: true,
-        itemCount: 604,
-        onPageChanged: (index) {
-          final page = index + 1;
-          setState(() => currentPage = page);
-          _loadSurahTitle(page);
-        },
-        itemBuilder: (context, index) {
-          return MushafPageWidget(
-            pageNumber: index + 1,
-            pageService: _pageService,
-          );
-        },
-      ),
-
-      /// 🔢 BOTTOM INFO
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+      /// 📖 PAGE VIEW WITH GRADIENT BACKGROUND
+      body: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFFAF7F2),
-          border: Border(
-            top: BorderSide(color: Colors.brown.shade200),
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              bgPaper,
+              const Color(0xFFF5F0E8),
+            ],
           ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: PageView.builder(
+          controller: _pageController,
+          reverse: true,
+          itemCount: 604,
+          onPageChanged: (index) {
+            final page = index + 1;
+            setState(() => currentPage = page);
+            _loadSurahTitle(page);
+          },
+          itemBuilder: (context, index) {
+            return MushafPageWidget(
+              pageNumber: index + 1,
+              pageService: _pageService,
+            );
+          },
+        ),
+      ),
+
+      /// 🔢 ENHANCED BOTTOM INFO
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              appBarBrown,
+              appBarBrown.withOpacity(0.95),
+            ],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildBottomInfo(
+                  icon: Icons.menu_book,
+                  label: 'صفحة',
+                  value: currentPage.toString(),
+                ),
+                Container(
+                  width: 1,
+                  height: 30,
+                  color: accentGold.withOpacity(0.3),
+                ),
+                _buildBottomInfo(
+                  icon: Icons.bookmark,
+                  label: 'جزء',
+                  value: '${((currentPage - 1) ~/ 20) + 1}',
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomInfo({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: accentGold),
+        const SizedBox(width: 8),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'صفحة $currentPage',
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-                color: Colors.black87,
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: accentGold.withOpacity(0.7),
+                fontWeight: FontWeight.w500,
               ),
             ),
             Text(
-              'جزء ${((currentPage - 1) ~/ 20) + 1}',
-              style: TextStyle(
-                color: Colors.brown.shade600,
-                fontSize: 14,
+              value,
+              style: const TextStyle(
+                fontSize: 16,
+                color: accentGold,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],
         ),
+      ],
+    );
+  }
+
+  Future<void> _showDownloadDialog() async {
+    final confirmed = await showDownloadQuranDialog(context);
+    if (!confirmed || !mounted) return;
+
+    startBackgroundDownload(
+      context,
+      onComplete: () {
+        if (mounted) {
+          setState(() => _isDataDownloaded = true);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                        'Download selesai! Mushaf siap digunakan offline.'),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      },
+      onError: () {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Row(
+                children: [
+                  Icon(Icons.error_outline, color: Colors.white),
+                  SizedBox(width: 12),
+                  Expanded(child: Text('Download gagal. Silakan coba lagi.')),
+                ],
+              ),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      },
+    );
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                  child: Text(
+                      'Download dimulai... Anda bisa tetap menggunakan app.')),
+            ],
+          ),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Future<void> _showClearDataDialog() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Hapus Data Offline?'),
+        content: const Text(
+          'Data Mushaf yang sudah di-download akan dihapus. '
+          'Anda perlu download ulang untuk menggunakan fitur offline.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Hapus'),
+          ),
+        ],
       ),
     );
+
+    if (confirm == true) {
+      await _downloadService.clearDownloadedData();
+      if (mounted) {
+        setState(() => _isDataDownloaded = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Data offline berhasil dihapus')),
+        );
+      }
+    }
   }
 
   void _showJumpToPage() {
@@ -148,13 +398,28 @@ class _MushafPageViewState extends State<MushafPageView> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: bgPaper,
-          title: const Text('Loncat ke Halaman'),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(Icons.arrow_forward, color: accentGold, size: 20),
+              const SizedBox(width: 8),
+              const Text('Loncat ke Halaman'),
+            ],
+          ),
           content: TextField(
             controller: controller,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               hintText: '1 – 604',
-              border: OutlineInputBorder(),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: accentGold.withOpacity(0.3)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: accentGold, width: 2),
+              ),
             ),
             autofocus: true,
           ),
@@ -166,6 +431,9 @@ class _MushafPageViewState extends State<MushafPageView> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: appBarBrown,
+                foregroundColor: accentGold,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
               ),
               onPressed: () {
                 final page = int.tryParse(controller.text);
@@ -184,7 +452,7 @@ class _MushafPageViewState extends State<MushafPageView> {
 }
 
 /// =======================
-/// 📄 WIDGET HALAMAN MUSHAF
+/// 📄 ENHANCED MUSHAF PAGE
 /// =======================
 class MushafPageWidget extends StatelessWidget {
   final int pageNumber;
@@ -197,7 +465,8 @@ class MushafPageWidget extends StatelessWidget {
   });
 
   static const accentBrown = Color(0xFF8B5E3C);
-  static const goldBrown = Color(0xFFC8A45D);
+  static const goldBrown = Color(0xFFD4AF37);
+  static const textPrimary = Color(0xFF1A1A1A);
 
   @override
   Widget build(BuildContext context) {
@@ -205,13 +474,36 @@ class MushafPageWidget extends StatelessWidget {
       future: pageService.fetchPage(pageNumber),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(color: accentBrown),
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(color: goldBrown, strokeWidth: 3),
+                const SizedBox(height: 16),
+                Text(
+                  'جاري التحميل...',
+                  style: TextStyle(
+                    fontFamily: 'UthmaniHafs',
+                    fontSize: 18,
+                    color: accentBrown.withOpacity(0.7),
+                  ),
+                ),
+              ],
+            ),
           );
         }
 
         if (snapshot.hasError) {
-          return const Center(child: Text('Gagal memuat halaman'));
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
+                const SizedBox(height: 16),
+                const Text('Gagal memuat halaman'),
+              ],
+            ),
+          );
         }
 
         final verses = snapshot.data ?? [];
@@ -219,26 +511,33 @@ class MushafPageWidget extends StatelessWidget {
           return const Center(child: Text('Tidak ada data'));
         }
 
-        return SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
-          child: Directionality(
-            textDirection: TextDirection.rtl,
-            child: Column(
-              children: [
-                // if (_isStartOfSurah(verses.first))
-                //   _buildSurahHeader(verses.first),
-                // if (_isStartOfSurah(verses.first))
-                //   _buildBismillah(verses.first.surah),
-                _buildVerses(verses),
-                const SizedBox(height: 28),
-                Text(
-                  pageNumber.toString(),
-                  style: TextStyle(
-                    color: Colors.brown.shade500,
-                    fontWeight: FontWeight.w600,
-                  ),
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(28, 32, 28, 28),
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: Column(
+                  children: [
+                    _buildVerses(verses),
+                    const SizedBox(height: 32),
+                    _buildPageNumber(),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         );
@@ -246,57 +545,40 @@ class MushafPageWidget extends StatelessWidget {
     );
   }
 
-  bool _isStartOfSurah(QuranVerse verse) => verse.ayah == 1;
-
-  bool _needsBismillah(QuranVerse verse) =>
-      verse.ayah == 1 && verse.surah != 1 && verse.surah != 9;
-
-  Widget _buildSurahHeader(QuranVerse verse) {
-    final surah = SurahData.byNumber(verse.surah);
+  Widget _buildPageNumber() {
     return Container(
-      margin: const EdgeInsets.all(12),
-      padding: const EdgeInsets.symmetric(vertical: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFFBF8F3),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: goldBrown, width: 1.8),
+        color: goldBrown.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: goldBrown.withOpacity(0.3)),
       ),
-      child: Column(
-        children: [
-          Text(
-            'سورة ${surah.arabic}',
-            style: const TextStyle(
-              fontFamily: 'UthmaniHafs',
-              fontSize: 26,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            surah.latin,
-            style: TextStyle(color: Colors.brown.shade600),
-          ),
-        ],
+      child: Text(
+        pageNumber.toString(),
+        style: const TextStyle(
+          color: accentBrown,
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+        ),
       ),
     );
   }
 
   Widget _buildBismillah(int surahNumber) {
-    // Surah 1 (Al-Fatihah) dan 9 (At-Taubah) tidak butuh header Bismillah tambahan
-    // Al-Fatihah karena Bismillah adalah ayat ke-1, At-Taubah memang tidak ada Bismillah.
     if (surahNumber == 1 || surahNumber == 9) {
       return const SizedBox.shrink();
     }
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.only(top: 0, bottom: 8),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: const Text(
         'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ',
         textAlign: TextAlign.center,
         style: TextStyle(
           fontFamily: 'UthmaniHafs',
-          fontSize: 28,
-          height: 1.5,
+          fontSize: 30,
+          height: 1.8,
+          color: textPrimary,
         ),
       ),
     );
@@ -305,98 +587,158 @@ class MushafPageWidget extends StatelessWidget {
   Widget _buildVerses(List<QuranVerse> verses) {
     return RichText(
       textDirection: TextDirection.rtl,
-      textAlign: TextAlign.center,
+      textAlign: TextAlign.justify,
       text: TextSpan(
         style: const TextStyle(
           fontFamily: 'UthmaniHafs',
-          fontSize: 26,
-          height: 2.25,
-          color: Colors.black87,
+          fontSize: 28,
+          height: 2.4,
+          color: textPrimary,
+          letterSpacing: 0.3,
         ),
         children: verses.expand((v) {
           final spans = <InlineSpan>[];
 
-          // ✅ JIKA AWAL SURAH (DI MANA PUN POSISINYA)
           if (v.ayah == 1) {
             final surah = SurahData.byNumber(v.surah);
 
-            // 🕌 DIVIDER ALA MUSHAF MADINAH
             spans.add(
               WidgetSpan(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 0),
+                  padding: const EdgeInsets.only(bottom: 16, top: 8),
                   child: Column(
                     children: [
-                      const Row(
+                      // Ornamental divider top
+                      Row(
                         children: [
                           Expanded(
-                            child: Divider(
-                              color: Color(0xFFD8C3A5),
-                              thickness: 1,
+                            child: Container(
+                              height: 2,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.transparent,
+                                    goldBrown.withOpacity(0.5),
+                                    goldBrown,
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                           Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 12),
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
                             child: Icon(
-                              Icons.local_florist,
-                              size: 18,
-                              color: Color(0xFFC8A45D),
+                              Icons.auto_awesome,
+                              size: 16,
+                              color: goldBrown,
                             ),
                           ),
                           Expanded(
-                            child: Divider(
-                              color: Color(0xFFD8C3A5),
-                              thickness: 1,
+                            child: Container(
+                              height: 2,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    goldBrown,
+                                    goldBrown.withOpacity(0.5),
+                                    Colors.transparent,
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
-                      // 📜 HEADER SURAH
-                      Text(
-                        'سورة ${surah.arabic}',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontFamily: 'UthmaniHafs',
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF8B5E3C),
+                      const SizedBox(height: 16),
+
+                      // Surah name container
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 12),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              goldBrown.withOpacity(0.15),
+                              goldBrown.withOpacity(0.08),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: goldBrown.withOpacity(0.3),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              'سورة ${surah.arabic}',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontFamily: 'UthmaniHafs',
+                                fontSize: 28,
+                                fontWeight: FontWeight.bold,
+                                color: accentBrown,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              surah.latin,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: accentBrown.withOpacity(0.8),
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        surah.latin,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.brown.shade600,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      const Row(
+
+                      const SizedBox(height: 16),
+
+                      // Ornamental divider bottom
+                      Row(
                         children: [
                           Expanded(
-                            child: Divider(
-                              color: Color(0xFFD8C3A5),
-                              thickness: 1,
+                            child: Container(
+                              height: 2,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.transparent,
+                                    goldBrown.withOpacity(0.5),
+                                    goldBrown,
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                           Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 12),
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
                             child: Icon(
-                              Icons.local_florist,
-                              size: 18,
-                              color: Color(0xFFC8A45D),
+                              Icons.auto_awesome,
+                              size: 16,
+                              color: goldBrown,
                             ),
                           ),
                           Expanded(
-                            child: Divider(
-                              color: Color(0xFFD8C3A5),
-                              thickness: 1,
+                            child: Container(
+                              height: 2,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    goldBrown,
+                                    goldBrown.withOpacity(0.5),
+                                    Colors.transparent,
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
+
+                      const SizedBox(height: 16),
                       _buildBismillah(verses.first.surah),
                     ],
                   ),
@@ -405,18 +747,40 @@ class MushafPageWidget extends StatelessWidget {
             );
           }
 
-          // 📖 AYAT
           spans.add(TextSpan(text: v.text));
           spans.add(const TextSpan(text: ' '));
           spans.add(
-            TextSpan(
-              text: '﴿${_toArabicNumber(v.ayah)}﴾ ',
-              style: const TextStyle(
-                fontSize: 20,
-                color: accentBrown,
+            WidgetSpan(
+              alignment: PlaceholderAlignment.middle,
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      goldBrown.withOpacity(0.15),
+                      goldBrown.withOpacity(0.1),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: goldBrown.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  '﴿${_toArabicNumber(v.ayah)}﴾',
+                  style: const TextStyle(
+                    fontFamily: 'UthmaniHafs',
+                    fontSize: 20,
+                    color: accentBrown,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
           );
+          spans.add(const TextSpan(text: ' '));
 
           return spans;
         }).toList(),

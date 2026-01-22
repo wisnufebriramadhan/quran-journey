@@ -13,8 +13,7 @@ class QuranAudioHandler extends BaseAudioHandler
   /// =====================
   String currentQari = 'abdullaah_3awwaad_al-juhaynee';
   int currentSurah = 1;
-
-  bool _isRestoring = false;
+  double currentSpeed = 1.0;
   bool _isInitialized = false;
 
   Stream<Duration> get positionStream => _player.positionStream;
@@ -89,19 +88,22 @@ class QuranAudioHandler extends BaseAudioHandler
       /// ✅ PENTING: tandai sudah init
       _isInitialized = true;
 
-      /// ✅ AMBIL NAMA SURAH ASLI
+      /// ✅ Ambil nama surah
       final surahName =
           (surah >= 1 && surah <= 114) ? surahNames[surah - 1] : 'Unknown';
 
       mediaItem.add(
         MediaItem(
           id: surah.toString(),
-          album: 'Al-Qur’an',
-          title: surahName, // 🔥 FIX UTAMA
+          album: 'Al-Qur\'an',
+          title: surahName,
           artist: currentQari.replaceAll('_', ' '),
           duration: duration,
         ),
       );
+
+      /// ✨ Restore speed setelah load
+      await _player.setSpeed(currentSpeed);
 
       if (autoPlay) {
         await play();
@@ -116,12 +118,14 @@ class QuranAudioHandler extends BaseAudioHandler
   /// =====================
   Future<void> _saveResumeState() async {
     final prefs = await SharedPreferences.getInstance();
+
     await prefs.setInt('last_surah', currentSurah);
     await prefs.setInt(
       'last_position',
       _player.position.inMilliseconds,
     );
     await prefs.setString('last_qari', currentQari);
+    await prefs.setDouble('last_speed', currentSpeed);
   }
 
   Future<void> _restoreLastSession() async {
@@ -130,10 +134,11 @@ class QuranAudioHandler extends BaseAudioHandler
     final surah = prefs.getInt('last_surah');
     final posMs = prefs.getInt('last_position');
     final qari = prefs.getString('last_qari');
+    final speed = prefs.getDouble('last_speed') ?? 1.0;
+
+    currentSpeed = speed;
 
     if (surah == null) return;
-
-    _isRestoring = true;
 
     await loadSurah(
       surah: surah,
@@ -144,8 +149,6 @@ class QuranAudioHandler extends BaseAudioHandler
     if (posMs != null) {
       await _player.seek(Duration(milliseconds: posMs));
     }
-
-    _isRestoring = false;
   }
 
   /// =====================
@@ -166,12 +169,27 @@ class QuranAudioHandler extends BaseAudioHandler
   @override
   Future<void> skipToPrevious() => _prevSurah(autoPlay: true);
 
+  /// ✨ SPEED CONTROL (CUSTOM)
+  Future<void> changeSpeed(double speed) async {
+    currentSpeed = speed;
+    await _player.setSpeed(speed);
+
+    playbackState.add(
+      playbackState.value.copyWith(speed: speed),
+    );
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('last_speed', speed);
+  }
+
   /// =====================
   /// REPEAT / SHUFFLE
   /// =====================
   @override
   Future<void> setRepeatMode(AudioServiceRepeatMode repeatMode) async {
-    playbackState.add(playbackState.value.copyWith(repeatMode: repeatMode));
+    playbackState.add(
+      playbackState.value.copyWith(repeatMode: repeatMode),
+    );
 
     switch (repeatMode) {
       case AudioServiceRepeatMode.one:
@@ -188,7 +206,9 @@ class QuranAudioHandler extends BaseAudioHandler
   @override
   Future<void> setShuffleMode(AudioServiceShuffleMode shuffleMode) async {
     final enabled = shuffleMode == AudioServiceShuffleMode.all;
+
     await _player.setShuffleModeEnabled(enabled);
+
     playbackState.add(
       playbackState.value.copyWith(shuffleMode: shuffleMode),
     );
@@ -200,13 +220,21 @@ class QuranAudioHandler extends BaseAudioHandler
   Future<void> _nextSurah({bool autoPlay = false}) async {
     int next = currentSurah + 1;
     if (next > 114) next = 1;
-    await loadSurah(surah: next, autoPlay: autoPlay);
+
+    await loadSurah(
+      surah: next,
+      autoPlay: autoPlay,
+    );
   }
 
   Future<void> _prevSurah({bool autoPlay = false}) async {
     int prev = currentSurah - 1;
     if (prev < 1) prev = 114;
-    await loadSurah(surah: prev, autoPlay: autoPlay);
+
+    await loadSurah(
+      surah: prev,
+      autoPlay: autoPlay,
+    );
   }
 
   /// =====================
@@ -236,6 +264,7 @@ class QuranAudioHandler extends BaseAudioHandler
         updatePosition: _player.position,
         repeatMode: playbackState.value.repeatMode,
         shuffleMode: playbackState.value.shuffleMode,
+        speed: currentSpeed,
       ),
     );
   }
