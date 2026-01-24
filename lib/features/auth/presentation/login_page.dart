@@ -104,11 +104,11 @@ class _LoginPageState extends State<LoginPage> {
                                     context,
                                     AppRoutes.home,
                                   );
-                                } catch (_) {
+                                } catch (e) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content:
-                                          Text('Email atau password salah'),
+                                    SnackBar(
+                                      backgroundColor: Colors.orange,
+                                      content: Text(e.toString()),
                                     ),
                                   );
                                 }

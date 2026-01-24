@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:audio_service/audio_service.dart';
+import 'package:quran_tracker/features/learning/data/service_locator.dart';
+import 'package:quran_tracker/features/learning/learning_page.dart';
 import 'package:quran_tracker/features/quran/audio_locator.dart';
 import 'package:quran_tracker/features/quran/quran_audio_handler.dart';
 
@@ -37,14 +39,17 @@ import 'features/settings/persentation/prayer_settings_page.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  /// 🔧 INIT SERVICE LOCATOR (API CLIENT & SERVICES)
+  sl.init(); // ← TAMBAHKAN INI
+
   /// 🔊 INIT AUDIO SERVICE (GLOBAL, SEKALI SAJA)
   audioHandler = await AudioService.init(
     builder: () => QuranAudioHandler(),
     config: const AudioServiceConfig(
       androidNotificationChannelId: 'com.qurantracker.audio',
       androidNotificationChannelName: 'Quran Audio',
-      androidNotificationOngoing: false, // ✅ FIX
-      androidStopForegroundOnPause: true, // ✅ FIX
+      androidNotificationOngoing: false,
+      androidStopForegroundOnPause: true,
     ),
   );
 
@@ -101,6 +106,7 @@ class QuranTrackerApp extends StatelessWidget {
           AppRoutes.prayerTime: (_) => const PrayerTimePage(),
           AppRoutes.settings: (_) => const PrayerSettingsPage(),
           AppRoutes.mushafDigital: (_) => const MushafPageView(initialPage: 1),
+          AppRoutes.learning: (_) => const LearningPage(),
         },
       ),
     );

@@ -15,10 +15,13 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
   late DateTime _ramadhanDate;
   late Timer _timer;
   Duration _remaining = Duration.zero;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
@@ -27,11 +30,22 @@ class _HomePageState extends State<HomePage> {
     _updateCountdown();
     _timer =
         Timer.periodic(const Duration(seconds: 1), (_) => _updateCountdown());
+
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
+    _animationController.forward();
   }
 
   @override
   void dispose() {
     _timer.cancel();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -81,270 +95,476 @@ class _HomePageState extends State<HomePage> {
         body: SafeArea(
           top: false,
           child: SingleChildScrollView(
-            child: Column(
-              children: [
-                /// ================= HEADER =================
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.only(
-                      top: 75, bottom: 20, left: 20, right: 20),
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color(0xFF5D4037),
-                        Color.fromARGB(255, 103, 74, 65)
+            child: FadeTransition(
+              opacity: _fadeAnimation,
+              child: Column(
+                children: [
+                  /// ================= HEADER WITH GRADIENT =================
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.only(
+                        top: 60, bottom: 24, left: 24, right: 24),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF5D4037),
+                          Color(0xFF6D4C41),
+                          Color.fromARGB(255, 103, 74, 65),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF5D4037).withOpacity(0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
                       ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(36),
-                      bottomRight: Radius.circular(36),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Assalamu’alaikum 🌙',
-                        style: TextStyle(color: Colors.white70),
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(40),
+                        bottomRight: Radius.circular(40),
                       ),
-                      const SizedBox(height: 6),
-                      const Text(
-                        'Qur’an Journey',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      /// ===== CARD HIJRI + RAMADHAN =====
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 16,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.18),
-                          borderRadius: BorderRadius.circular(22),
-                        ),
-                        child: Row(
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Hari ini (Hijriah)',
-                                    style: TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 13,
-                                    ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Assalamualaikum 🌙',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.85),
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
                                   ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    getHijriToday(),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                ),
+                                const SizedBox(height: 8),
+                                const Text(
+                                  'Quran Journey',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
                                   ),
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  const Text(
-                                    'Menuju Ramadhan',
-                                    style: TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                  Text(
-                                    formatMasehi(_ramadhanDate),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    '$days hari ${two(hours)}:${two(minutes)}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ),
+                        const SizedBox(height: 20),
 
-                      const SizedBox(height: 12),
-
-                      /// ===== CARD PENGINGAT SHOLAT (TERPISAH) =====
-                      Consumer<PrayerTimeProvider>(
-                        builder: (context, prayer, _) {
-                          if (prayer.nextPrayerName == null ||
-                              prayer.nextPrayerTime == null) {
-                            return const SizedBox.shrink();
-                          }
-
-                          return Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.18),
-                              borderRadius: BorderRadius.circular(20),
+                        /// ===== CARD HIJRI + RAMADHAN WITH GLASSMORPHISM =====
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.white.withOpacity(0.25),
+                                Colors.white.withOpacity(0.15),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.white.withOpacity(0.25),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.3),
+                              width: 1.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.25),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: const Icon(
+                                      Icons.calendar_today_rounded,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
                                   ),
-                                  child: const Icon(
-                                    Icons.notifications_active_rounded,
-                                    color: Colors.white,
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Hari ini (Hijriah)',
+                                          style: TextStyle(
+                                            color:
+                                                Colors.white.withOpacity(0.8),
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          getHijriToday(),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Container(
+                                height: 1,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.white.withOpacity(0.0),
+                                      Colors.white.withOpacity(0.5),
+                                      Colors.white.withOpacity(0.0),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
-                                        'Pengingat Sholat Berikutnya',
+                                      Text(
+                                        'Menuju Ramadhan',
                                         style: TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 12,
+                                          color: Colors.white.withOpacity(0.8),
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        '${prayer.nextPrayerName} • ${formatTime(prayer.nextPrayerTime!)}',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
+                                        formatMasehi(_ramadhanDate),
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.95),
+                                          fontSize: 14,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                     ],
                                   ),
-                                ),
-                                Text(
-                                  formatDuration(prayer.remainingToNextPrayer),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.25),
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Text(
+                                      '$days hari ${two(hours)}:${two(minutes)}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-
-                      const SizedBox(height: 14),
-
-                      /// ===== CTA =====
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: const Color(0xFF5D4037),
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
+                                ],
+                              ),
+                            ],
                           ),
-                          icon: const Icon(Icons.menu_book),
-                          label: const Text(
-                            'Murattal',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const QuranAudioPlayerPage(
-                                  initialSurah:
-                                      1, // default hanya untuk FIRST entry
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        /// ===== CARD PENGINGAT SHOLAT =====
+                        Consumer<PrayerTimeProvider>(
+                          builder: (context, prayer, _) {
+                            if (prayer.nextPrayerName == null ||
+                                prayer.nextPrayerTime == null) {
+                              return const SizedBox.shrink();
+                            }
+
+                            return Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(18),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.white.withOpacity(0.25),
+                                    Colors.white.withOpacity(0.15),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                 ),
+                                borderRadius: BorderRadius.circular(22),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.3),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Colors.white.withOpacity(0.35),
+                                          Colors.white.withOpacity(0.25),
+                                        ],
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.notifications_active_rounded,
+                                      color: Colors.white,
+                                      size: 22,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Sholat Berikutnya',
+                                          style: TextStyle(
+                                            color:
+                                                Colors.white.withOpacity(0.8),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '${prayer.nextPrayerName} • ${formatTime(prayer.nextPrayerTime!)}',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.25),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      formatDuration(
+                                          prayer.remainingToNextPrayer),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             );
                           },
                         ),
-                      ),
-                    ],
-                  ),
-                ),
 
-                Transform.translate(
-                  offset: const Offset(0, -30),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: GridView(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 16,
-                        crossAxisSpacing: 16,
-                      ),
-                      children: [
-                        _MenuGrid(
-                          icon: Icons.menu_book_outlined,
-                          label: 'Mushaf',
-                          color: Colors.brown,
-                          onTap: () => Navigator.pushNamed(
-                              context, AppRoutes.mushafDigital),
-                        ),
-                        _MenuGrid(
-                          icon: Icons.notes,
-                          label: 'Catatan Qur’an',
-                          color: Colors.brown,
-                          onTap: () =>
-                              Navigator.pushNamed(context, AppRoutes.quranLog),
-                        ),
-                        _MenuGrid(
-                          icon: Icons.mosque_rounded,
-                          label: 'Waktu Sholat',
-                          color: Colors.brown,
-                          onTap: () => Navigator.pushNamed(
-                              context, AppRoutes.prayerTime),
-                        ),
-                        _MenuGrid(
-                          icon: Icons.settings_rounded,
-                          label: 'Pengaturan',
-                          color: Colors.brown,
-                          onTap: () =>
-                              Navigator.pushNamed(context, AppRoutes.settings),
+                        const SizedBox(height: 16),
+
+                        /// ===== CTA MURATTAL =====
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(18),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.white.withOpacity(0.3),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: const Color(0xFF5D4037),
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF5D4037)
+                                        .withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(
+                                    Icons.play_circle_fill_rounded,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  'Dengarkan Murattal',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const QuranAudioPlayerPage(
+                                    initialSurah: 1,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ],
                     ),
                   ),
-                ),
 
-                const SizedBox(height: 16),
-              ],
+                  /// ================= MENU GRID (2x3) =================
+                  Transform.translate(
+                    offset: const Offset(0, -35),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: GridView(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 1.0,
+                        ),
+                        children: [
+                          _MenuGrid(
+                            icon: Icons.menu_book_rounded,
+                            label: 'Mushaf',
+                            color: const Color(0xFF5D4037),
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF6D4C41), Color(0xFF5D4037)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            onTap: () => Navigator.pushNamed(
+                                context, AppRoutes.mushafDigital),
+                          ),
+                          _MenuGrid(
+                            icon: Icons.edit_note_rounded,
+                            label: 'Catatan Quran',
+                            color: const Color(0xFF5D4037),
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF6D4C41), Color(0xFF6D4C41)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            onTap: () => Navigator.pushNamed(
+                                context, AppRoutes.quranLog),
+                          ),
+                          _MenuGrid(
+                            icon: Icons.school_rounded,
+                            label: 'Pembelajaran',
+                            color: const Color(0xFF5D4037),
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF7B5E57), Color(0xFF6D4C41)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            onTap: () => Navigator.pushNamed(
+                                context, AppRoutes.learning),
+                          ),
+                          _MenuGrid(
+                            icon: Icons.mosque_rounded,
+                            label: 'Waktu Sholat',
+                            color: const Color(0xFF5D4037),
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF6D4C41), Color(0xFF8D6E63)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            onTap: () => Navigator.pushNamed(
+                                context, AppRoutes.prayerTime),
+                          ),
+                          _MenuGrid(
+                            icon: Icons.play_circle_fill_rounded,
+                            label: 'Murattal Audio',
+                            color: const Color(0xFF5D4037),
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF8D6E63), Color(0xFFa1887f)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const QuranAudioPlayerPage(
+                                    initialSurah: 1,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                          _MenuGrid(
+                            icon: Icons.settings_rounded,
+                            label: 'Pengaturan',
+                            color: const Color(0xFF5D4037),
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF8D6E63), Color(0xFFBCAAA4)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            onTap: () => Navigator.pushNamed(
+                                context, AppRoutes.settings),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+                ],
+              ),
             ),
           ),
         ),
@@ -353,53 +573,92 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-/// ================= GRID MENU =================
-class _MenuGrid extends StatelessWidget {
+/// ================= ENHANCED GRID MENU =================
+class _MenuGrid extends StatefulWidget {
   final IconData icon;
   final String label;
   final Color color;
+  final Gradient gradient;
   final VoidCallback onTap;
 
   const _MenuGrid({
     required this.icon,
     required this.label,
     required this.color,
+    required this.gradient,
     required this.onTap,
   });
 
   @override
+  State<_MenuGrid> createState() => _MenuGridState();
+}
+
+class _MenuGridState extends State<_MenuGrid> {
+  bool _isPressed = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Material(
-      borderRadius: BorderRadius.circular(20),
-      color: Colors.white,
-      elevation: 2,
-      shadowColor: Colors.black12,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: color.withOpacity(0.15),
-                ),
-                child: Icon(icon, color: color, size: 30),
+    return AnimatedScale(
+      scale: _isPressed ? 0.95 : 1.0,
+      duration: const Duration(milliseconds: 100),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: widget.color.withOpacity(0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Material(
+          borderRadius: BorderRadius.circular(24),
+          color: Colors.white,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(24),
+            onTap: widget.onTap,
+            onTapDown: (_) => setState(() => _isPressed = true),
+            onTapUp: (_) => setState(() => _isPressed = false),
+            onTapCancel: () => setState(() => _isPressed = false),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: widget.gradient,
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: widget.color.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      widget.icon,
+                      color: Colors.white,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    widget.label,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: widget.color,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.quran_tracker"
+    namespace = "com.wisnufebri.quran.app"
     compileSdk 35
     ndkVersion "26.1.10909125"
 
@@ -20,7 +20,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.quran_tracker"
+        applicationId "com.wisnufebri.quran.app"
         minSdk 21
         targetSdk 35
         versionCode 1

@@ -1,6 +1,7 @@
 enum PrayerMethodType {
   kemenag,
   mwl,
+  sihat,
 }
 
 enum HijriMethodType {
@@ -25,11 +26,11 @@ class SettingsModel {
   const SettingsModel({
     required this.prayerMethod,
     required this.hijriMethod,
-    this.fajrOffset = 1,
-    this.dhuhrOffset = 0,
-    this.asrOffset = 0,
-    this.maghribOffset = 0,
-    this.ishaOffset = 0,
+    this.fajrOffset = 2,
+    this.dhuhrOffset = 2,
+    this.asrOffset = 2,
+    this.maghribOffset = 2,
+    this.ishaOffset = 2,
     this.hijriOffset = 0,
   });
 

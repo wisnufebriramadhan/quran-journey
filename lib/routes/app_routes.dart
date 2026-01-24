@@ -8,4 +8,5 @@ class AppRoutes {
   static const settings = '/settings';
   static const quranAudio = '/quran-audio';
   static const mushafDigital = '/mushaf-digital';
+  static const learning = '/learning';
 }

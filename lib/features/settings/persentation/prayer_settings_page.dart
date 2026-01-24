@@ -24,6 +24,17 @@ class PrayerSettingsPage extends StatelessWidget {
           ),
 
           RadioListTile<PrayerMethodType>(
+            title: const Text('Sihat Indonesia'),
+            value: PrayerMethodType.sihat,
+            groupValue: settings.prayerMethod,
+            onChanged: (PrayerMethodType? v) {
+              if (v != null) {
+                context.read<SettingsProvider>().setPrayerMethod(v);
+              }
+            },
+          ),
+
+          RadioListTile<PrayerMethodType>(
             title: const Text('Kemenag RI'),
             value: PrayerMethodType.kemenag,
             groupValue: settings.prayerMethod,
@@ -91,9 +102,7 @@ class PrayerSettingsPage extends StatelessWidget {
             label: '${settings.hijriOffset} hari',
             value: settings.hijriOffset.toDouble(),
             onChanged: (v) {
-              context
-                  .read<SettingsProvider>()
-                  .setHijriOffset(v.toInt());
+              context.read<SettingsProvider>().setHijriOffset(v.toInt());
             },
           ),
         ],

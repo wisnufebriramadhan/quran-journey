@@ -1,4 +1,4 @@
-package com.example.quran_tracker
+package com.wisnufebri.quran.app
 
 import com.ryanheise.audioservice.AudioServiceActivity
 

@@ -26,7 +26,6 @@ class _QuranAudioPlayerPageState extends State<QuranAudioPlayerPage>
     with SingleTickerProviderStateMixin {
   late final QuranAudioHandler handler;
   late AnimationController _rotationController;
-  bool _showSpeedControl = false;
   double _playbackSpeed = 1.0;
 
   @override
