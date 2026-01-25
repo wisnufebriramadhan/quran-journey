@@ -4,8 +4,10 @@ import 'package:adhan/adhan.dart';
 import '../../core/services/location_service.dart';
 import '../../features/settings/data/settings_model.dart';
 import 'data/prayer_time_service.dart';
+import 'data/notification_service.dart';
 
 class PrayerTimeProvider extends ChangeNotifier {
+  // ================= DATA =================
   PrayerTimes? prayerTimes;
   Prayer? nextPrayer;
 
@@ -18,23 +20,22 @@ class PrayerTimeProvider extends ChangeNotifier {
   bool loading = false;
   String? error;
 
-  // 🔥 CONSTRUCTOR KOSONG (WAJIB)
-  PrayerTimeProvider();
+  final NotificationService _notificationService = NotificationService();
 
-  // 🔥 DIPANGGIL DARI ProxyProvider
+  // ================= SETTINGS =================
   void updateSettings(SettingsModel settings) {
     _settings = settings;
     loadPrayerTimes();
   }
 
+  // ================= LOAD PRAYER TIMES =================
   Future<void> loadPrayerTimes() async {
     if (_settings == null) return;
 
-    loading = true;
-    error = null;
-    notifyListeners();
-
     try {
+      loading = true;
+      error = null;
+
       final location = await LocationService.getCurrentLocation();
 
       city = location.city;
@@ -47,13 +48,10 @@ class PrayerTimeProvider extends ChangeNotifier {
       );
 
       final next = prayerTimes!.nextPrayer();
+      nextPrayer = next == Prayer.none ? Prayer.fajr : next;
 
-      if (next == Prayer.none) {
-        // 🔥 sudah lewat Isya → next Subuh BESOK
-        nextPrayer = Prayer.fajr;
-      } else {
-        nextPrayer = next;
-      }
+      await _scheduleNotifications();
+      await NotificationService().schedulePrayerNotifications(prayerTimes!);
     } catch (e) {
       error = 'Gagal memuat waktu sholat';
     } finally {
@@ -62,8 +60,41 @@ class PrayerTimeProvider extends ChangeNotifier {
     }
   }
 
-  /// ================= NEXT PRAYER HELPERS =================
+  // ================= SCHEDULE =================
+  Future<void> _scheduleNotifications() async {
+    if (prayerTimes == null) return;
 
+    try {
+      await _notificationService.initialize();
+      final allowed = await _notificationService.requestPermission();
+
+      if (allowed) {
+        await _notificationService.schedulePrayerNotifications(prayerTimes!);
+      }
+    } catch (e) {
+      debugPrint('Notification error: $e');
+    }
+  }
+
+  // ================= PER-PRAYER TOGGLE =================
+  Future<bool> isPrayerEnabled(Prayer prayer) async {
+    return await _notificationService.getPrayerNotificationEnabled(prayer);
+  }
+
+  Future<void> togglePrayer(
+    Prayer prayer,
+    bool enabled,
+  ) async {
+    await _notificationService.setPrayerNotificationEnabled(prayer, enabled);
+
+    if (prayerTimes != null) {
+      await _notificationService.schedulePrayerNotifications(prayerTimes!);
+    }
+
+    notifyListeners();
+  }
+
+  // ================= NEXT PRAYER TIME =================
   DateTime? get nextPrayerTime {
     if (prayerTimes == null || nextPrayer == null) return null;
 
@@ -83,6 +114,7 @@ class PrayerTimeProvider extends ChangeNotifier {
     }
   }
 
+  // ================= NEXT PRAYER NAME =================
   String? get nextPrayerName {
     if (nextPrayer == null) return null;
 
@@ -102,6 +134,7 @@ class PrayerTimeProvider extends ChangeNotifier {
     }
   }
 
+  // ================= REMAINING TIME =================
   Duration get remainingToNextPrayer {
     if (nextPrayerTime == null) return Duration.zero;
     return nextPrayerTime!.difference(DateTime.now());

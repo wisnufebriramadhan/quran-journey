@@ -34,12 +34,9 @@ class _LearningPageState extends State<LearningPage> {
     _initializePage();
   }
 
-  // ✨ SOLUSI 2: Refresh data setiap kali widget muncul di layar
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-
-    // Refresh setiap kali widget rebuild (termasuk saat kembali ke halaman ini)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && !_isLoading) {
         _refreshData();
@@ -47,19 +44,14 @@ class _LearningPageState extends State<LearningPage> {
     });
   }
 
-  // ✨ Method untuk initialize pertama kali
   Future<void> _initializePage() async {
     await _loadAttendanceStatus();
-
-    // Auto-detect lokasi hanya jika belum absen
     if (!_hasAttended) {
       await _getCurrentLocation();
     }
   }
 
-  // ✨ Method untuk refresh data (tanpa loading full screen)
   Future<void> _refreshData() async {
-    // Jangan tampilkan loading screen, hanya refresh data
     try {
       final response = await _service.getAttendanceStatus();
 
@@ -79,13 +71,11 @@ class _LearningPageState extends State<LearningPage> {
           }
         });
 
-        // Re-check location jika belum absen dan belum ada posisi
         if (!_hasAttended && _currentPosition == null) {
           _getCurrentLocation();
         }
       }
     } catch (e) {
-      // Silent error, data lama masih ditampilkan
       print('Refresh error: $e');
     }
   }
@@ -122,7 +112,6 @@ class _LearningPageState extends State<LearningPage> {
         errorMessage = errorMessage.substring(11);
       }
 
-      // Jika error authentication, redirect ke login
       if (errorMessage.contains('Sesi habis') ||
           errorMessage.contains('Token tidak ditemukan') ||
           errorMessage.contains('Unauthenticated')) {
@@ -189,8 +178,6 @@ class _LearningPageState extends State<LearningPage> {
       );
 
       setState(() => _currentPosition = position);
-
-      // Check if in range
       await _checkIfInRange(position.latitude, position.longitude);
     } catch (e) {
       setState(() => _isCheckingLocation = false);
@@ -206,7 +193,6 @@ class _LearningPageState extends State<LearningPage> {
       if (_currentPosition == null) return;
     }
 
-    // Cek dulu apakah dalam jangkauan
     if (_inRange == false) {
       _showError(
           'Anda berada di luar jangkauan. Jarak: ${_distance?.toStringAsFixed(0)} meter dari lokasi kantor.');
@@ -278,9 +264,18 @@ class _LearningPageState extends State<LearningPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.red.shade600,
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
     );
   }
@@ -290,9 +285,18 @@ class _LearningPageState extends State<LearningPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: Colors.green.shade600,
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
     );
   }
@@ -304,7 +308,7 @@ class _LearningPageState extends State<LearningPage> {
         backgroundColor: const Color(0xFF5D4037),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
         ),
       ),
     );
@@ -319,179 +323,200 @@ class _LearningPageState extends State<LearningPage> {
         statusBarBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: const Color(0xffF4F6F8),
         body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : SafeArea(
-                top: false,
-                child: CustomScrollView(
-                  slivers: [
-                    _buildAppBar(),
-                    SliverPadding(
-                      padding: const EdgeInsets.all(20),
-                      sliver: SliverList(
-                        delegate: SliverChildListDelegate([
-                          _buildHeaderInfo(),
-                          const SizedBox(height: 24),
-                          _buildStatsGrid(),
-                          const SizedBox(height: 24),
-                          _buildAttendanceCard(),
-                          const SizedBox(height: 24),
-                          const Text(
-                            'Kategori Pembelajaran',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF5D4037),
+            ? Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xFF3E2723),
+                      Color(0xFF4A3428),
+                      Color(0xFF5D4037),
+                      Color(0xFF6D4C41),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                ),
+              )
+            : Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xFF3E2723),
+                      Color(0xFF4A3428),
+                      Color(0xFF5D4037),
+                      Color(0xFF6D4C41),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: SafeArea(
+                  child: Column(
+                    children: [
+                      /// Header
+                      Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Row(
+                          children: [
+                            IconButton(
+                              onPressed: () => Navigator.pop(context),
+                              icon: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.15),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.2),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_back,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                            const SizedBox(width: 16),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Pembelajaran',
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  SizedBox(height: 4),
+                                  Text(
+                                    'Tingkatkan pemahaman Al-Quran',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      /// Stats Cards
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _StatCard(
+                                icon: '📅',
+                                label: 'Hari Ini',
+                                value: DateTime.now().day.toString(),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _StatCard(
+                                icon: _hasAttended ? '✅' : '❌',
+                                label: 'Status',
+                                value: _hasAttended ? 'Hadir' : 'Belum',
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _StatCard(
+                                icon: '📍',
+                                label: 'Radius',
+                                value: '${_officeLocation?.radius ?? 100}m',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      /// Content Area
+                      Expanded(
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF8F9FA),
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(32),
+                              topRight: Radius.circular(32),
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          _buildCategoriesGrid(),
-                          const SizedBox(height: 24),
-                        ]),
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                /// Attendance Card
+                                _buildAttendanceCard(),
+                                const SizedBox(height: 28),
+
+                                /// Categories Title
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [
+                                            Color(0xFF6D4C41),
+                                            Color(0xFF5D4037)
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(12),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFF5D4037)
+                                                .withOpacity(0.3),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(
+                                        Icons.school_rounded,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Text(
+                                      'Kategori Pembelajaran',
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF3E2723),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+
+                                /// Categories Grid
+                                _buildCategoriesGrid(),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
       ),
-    );
-  }
-
-  Widget _buildAppBar() {
-    return SliverAppBar(
-      expandedHeight: 200,
-      floating: false,
-      pinned: true,
-      backgroundColor: const Color(0xFF5D4037),
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-        onPressed: () => Navigator.pop(context),
-      ),
-      flexibleSpace: FlexibleSpaceBar(
-        title: const Text(
-          'Pembelajaran',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
-        background: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Color(0xFF5D4037),
-                Color(0xFF6D4C41),
-                Color(0xFF7B5E57),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Stack(
-            children: [
-              Positioned(
-                right: -50,
-                top: 50,
-                child: Icon(
-                  Icons.school_rounded,
-                  size: 200,
-                  color: Colors.white.withOpacity(0.1),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeaderInfo() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFF5D4037).withOpacity(0.1),
-            const Color(0xFF6D4C41).withOpacity(0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFF5D4037).withOpacity(0.2),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF5D4037),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.lightbulb_rounded,
-              color: Colors.white,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Mari Belajar Bersama',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF5D4037),
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'Tingkatkan pemahaman Al-Quran Anda',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.black54,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatsGrid() {
-    return Row(
-      children: [
-        Expanded(
-          child: _StatCard(
-            icon: '📅',
-            label: 'Hari Ini',
-            value: DateTime.now().day.toString(),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _StatCard(
-            icon: _hasAttended ? '✅' : '❌',
-            label: 'Status',
-            value: _hasAttended ? 'Hadir' : 'Belum',
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _StatCard(
-            icon: '📍',
-            label: 'Radius',
-            value: '${_officeLocation?.radius ?? 100}m',
-          ),
-        ),
-      ],
     );
   }
 
@@ -501,20 +526,25 @@ class _LearningPageState extends State<LearningPage> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: _hasAttended
-              ? [const Color(0xFFf0fdf4), const Color(0xFFdcfce7)]
-              : [const Color(0xFFf0f9ff), const Color(0xFFe0f2fe)],
+              ? [Colors.white.withOpacity(0.25), Colors.white.withOpacity(0.15)]
+              : [const Color(0xFF6D4C41), const Color(0xFF5D4037)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color:
-              _hasAttended ? const Color(0xFF10b981) : const Color(0xFF0ea5e9),
-          width: 2,
+          color: _hasAttended
+              ? const Color(0xFF10b981).withOpacity(0.3)
+              : Colors.white.withOpacity(0.3),
+          width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: _hasAttended
+                ? const Color(0xFF10b981).withOpacity(0.2)
+                : Colors.black.withOpacity(0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -525,7 +555,9 @@ class _LearningPageState extends State<LearningPage> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.5),
+                  color: _hasAttended
+                      ? const Color(0xFF10b981).withOpacity(0.2)
+                      : Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
@@ -540,10 +572,12 @@ class _LearningPageState extends State<LearningPage> {
                   children: [
                     Text(
                       _hasAttended ? 'Absensi Berhasil!' : 'Absensi Hari Ini',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF1f2937),
+                        color: _hasAttended
+                            ? const Color(0xFF10b981)
+                            : Colors.white,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -551,7 +585,9 @@ class _LearningPageState extends State<LearningPage> {
                       _dateFormatted,
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.black.withOpacity(0.6),
+                        color: _hasAttended
+                            ? Colors.black54
+                            : Colors.white.withOpacity(0.8),
                       ),
                     ),
                   ],
@@ -578,7 +614,7 @@ class _LearningPageState extends State<LearningPage> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [
@@ -618,15 +654,14 @@ class _LearningPageState extends State<LearningPage> {
 
     return Column(
       children: [
-        // Loading indicator saat checking location
         if (_isCheckingLocation) ...[
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.blue.shade50,
+              color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Colors.blue,
+                color: Colors.white.withOpacity(0.3),
                 width: 1,
               ),
             ),
@@ -637,7 +672,8 @@ class _LearningPageState extends State<LearningPage> {
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -646,7 +682,7 @@ class _LearningPageState extends State<LearningPage> {
                     'Memeriksa lokasi Anda...',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -655,18 +691,20 @@ class _LearningPageState extends State<LearningPage> {
           ),
           const SizedBox(height: 16),
         ],
-
-        // Status lokasi (jika sudah selesai check)
         if (!_isCheckingLocation &&
             _currentPosition != null &&
             _inRange != null) ...[
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: _inRange! ? Colors.green.shade50 : Colors.red.shade50,
+              color: _inRange!
+                  ? Colors.green.withOpacity(0.2)
+                  : Colors.red.withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: _inRange! ? Colors.green : Colors.red,
+                color: _inRange!
+                    ? Colors.green.withOpacity(0.5)
+                    : Colors.red.withOpacity(0.5),
                 width: 1,
               ),
             ),
@@ -702,49 +740,72 @@ class _LearningPageState extends State<LearningPage> {
           ),
           const SizedBox(height: 16),
         ],
-
-        // Button Absen
-        ElevatedButton(
-          onPressed: shouldDisable ? null : _submitAttendance,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF5D4037),
-            foregroundColor: Colors.white,
-            disabledBackgroundColor: Colors.grey.shade400,
-            disabledForegroundColor: Colors.grey.shade600,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            minimumSize: const Size(double.infinity, 56),
-          ),
-          child: _isSubmitting
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        Container(
+          decoration: BoxDecoration(
+            gradient: shouldDisable
+                ? null
+                : LinearGradient(
+                    colors: [
+                      Colors.amber.shade300,
+                      Colors.amber.shade400,
+                    ],
                   ),
-                )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      isOutOfRange
-                          ? Icons.location_off_rounded
-                          : Icons.location_on_rounded,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      isOutOfRange ? 'Diluar Jangkauan' : 'Absen Sekarang',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: shouldDisable
+                ? []
+                : [
+                    BoxShadow(
+                      color: Colors.amber.withOpacity(0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
                     ),
                   ],
-                ),
+          ),
+          child: ElevatedButton(
+            onPressed: shouldDisable ? null : _submitAttendance,
+            style: ElevatedButton.styleFrom(
+              backgroundColor:
+                  shouldDisable ? Colors.grey.shade400 : Colors.transparent,
+              foregroundColor: shouldDisable
+                  ? Colors.grey.shade600
+                  : const Color(0xFF5D4037),
+              shadowColor: Colors.transparent,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              minimumSize: const Size(double.infinity, 56),
+            ),
+            child: _isSubmitting
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(Color(0xFF5D4037)),
+                    ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        isOutOfRange
+                            ? Icons.location_off_rounded
+                            : Icons.location_on_rounded,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        isOutOfRange ? 'Diluar Jangkauan' : 'Absen Sekarang',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
         ),
       ],
     );
@@ -754,10 +815,14 @@ class _LearningPageState extends State<LearningPage> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _hasAttended ? Colors.green.shade50 : Colors.orange.shade50,
+        color: _hasAttended
+            ? Colors.green.withOpacity(0.2)
+            : Colors.white.withOpacity(0.2),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: _hasAttended ? Colors.green : Colors.orange,
+          color: _hasAttended
+              ? Colors.green.withOpacity(0.3)
+              : Colors.white.withOpacity(0.3),
           width: 1,
         ),
       ),
@@ -775,9 +840,7 @@ class _LearningPageState extends State<LearningPage> {
                   : 'Pastikan GPS aktif dan izinkan akses lokasi',
               style: TextStyle(
                 fontSize: 12,
-                color: _hasAttended
-                    ? Colors.green.shade900
-                    : Colors.orange.shade900,
+                color: _hasAttended ? Colors.green.shade900 : Colors.white,
               ),
             ),
           ),
@@ -866,14 +929,17 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-          ),
-        ],
+        gradient: LinearGradient(
+          colors: [
+            Colors.white.withOpacity(0.25),
+            Colors.white.withOpacity(0.15),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.3),
+          width: 1,
+        ),
       ),
       child: Column(
         children: [
@@ -884,7 +950,7 @@ class _StatCard extends StatelessWidget {
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF5D4037),
+              color: Colors.white,
             ),
           ),
           const SizedBox(height: 4),
@@ -892,7 +958,7 @@ class _StatCard extends StatelessWidget {
             label,
             style: TextStyle(
               fontSize: 11,
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.white.withOpacity(0.8),
             ),
           ),
         ],
@@ -916,52 +982,71 @@ class _LearningCategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      elevation: 2,
-      shadowColor: Colors.black26,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          colors: [Colors.white, Color(0xFFFFFBF5)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF5D4037).withOpacity(0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: gradient,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF5D4037).withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    gradient: gradient,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF5D4037).withOpacity(0.4),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    icon,
+                    color: Colors.white,
+                    size: 34,
+                  ),
                 ),
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 32,
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13.5,
+                    color: Color(0xFF5D4037),
+                    letterSpacing: 0.2,
+                    height: 1.3,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: Color(0xFF5D4037),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

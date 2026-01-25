@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:audio_service/audio_service.dart';
+import 'package:quran_tracker/features/prayer_time/data/notification_service.dart';
+
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tzdata;
+
 import 'package:quran_tracker/features/learning/data/service_locator.dart';
 import 'package:quran_tracker/features/learning/learning_page.dart';
 import 'package:quran_tracker/features/quran/audio_locator.dart';
@@ -39,10 +44,25 @@ import 'features/settings/persentation/prayer_settings_page.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  /// 🔧 INIT SERVICE LOCATOR (API CLIENT & SERVICES)
-  sl.init(); // ← TAMBAHKAN INI
+  // ================================
+  // 🌍 TIMEZONE (WAJIB)
+  // ================================
+  tzdata.initializeTimeZones();
+  tz.setLocalLocation(tz.getLocation('Asia/Jakarta'));
 
-  /// 🔊 INIT AUDIO SERVICE (GLOBAL, SEKALI SAJA)
+  // ================================
+  // 🔔 NOTIFICATION INIT
+  // ================================
+  await NotificationService().init();
+
+  // ================================
+  // 🔧 SERVICE LOCATOR
+  // ================================
+  sl.init();
+
+  // ================================
+  // 🔊 AUDIO SERVICE
+  // ================================
   audioHandler = await AudioService.init(
     builder: () => QuranAudioHandler(),
     config: const AudioServiceConfig(

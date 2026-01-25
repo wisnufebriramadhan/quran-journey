@@ -2,67 +2,59 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-
-	<!-- ================= BASIC APP INFO ================= -->
-	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
-
-	<key>CFBundleDisplayName</key>
-	<string>Quran Tracker</string>
-
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
-
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
-
-	<key>CFBundleName</key>
-	<string>quran_tracker</string>
-
-	<key>CFBundlePackageType</key>
-	<string>APPL</string>
-
-	<key>CFBundleShortVersionString</key>
-	<string>$(FLUTTER_BUILD_NAME)</string>
-
-	<key>CFBundleVersion</key>
-	<string>$(FLUTTER_BUILD_NUMBER)</string>
-
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-
-	<!-- ================= PERFORMANCE ================= -->
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
-
-	<!-- ================= SCENE LIFECYCLE (FIX WARNING) ================= -->
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Quran Tracker</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>quran_tracker</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Aplikasi memerlukan akses jaringan lokal untuk debugging dan koneksi perangkat.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Aplikasi membutuhkan lokasi untuk menentukan waktu sholat</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Aplikasi membutuhkan lokasi untuk menentukan waktu sholat</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Aplikasi membutuhkan lokasi untuk menentukan waktu sholat</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
 	</dict>
-
-	<!-- ================= UI CONFIG ================= -->
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
-
-	<key>UIMainStoryboardFile</key>
-	<string>Main</string>
-
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-
-	<!-- ================= ORIENTATION ================= -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+		<string>location</string>
+		<string>remote-notification</string>
+	</array>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -70,27 +62,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-
-	<!-- ================= BACKGROUND MODES ================= -->
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>audio</string>
-		<string>location</string>
-	</array>
-
-	<!-- ================= LOCATION PERMISSIONS ================= -->
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Aplikasi membutuhkan lokasi untuk menentukan waktu sholat</string>
-
-	<key>NSLocationAlwaysUsageDescription</key>
-	<string>Aplikasi membutuhkan lokasi untuk menentukan waktu sholat</string>
-
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Aplikasi membutuhkan lokasi untuk menentukan waktu sholat</string>
-
-	<!-- ================= LOCAL NETWORK (DEBUG SAFETY) ================= -->
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Aplikasi memerlukan akses jaringan lokal untuk debugging dan koneksi perangkat.</string>
-
 </dict>
 </plist>

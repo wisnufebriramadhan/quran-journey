@@ -30,6 +30,11 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.debug
+
+            // 👇 TAMBAHKAN INI UNTUK MINIFY & SHRINK
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
