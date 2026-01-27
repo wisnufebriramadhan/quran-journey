@@ -145,6 +145,7 @@ class _AddLogSheetState extends State<AddLogSheet> {
                             : int.parse(durationController.text),
                       });
 
+                      // ignore: use_build_context_synchronously
                       Navigator.pop(context);
                     },
               child: const Text('Simpan Bacaan'),

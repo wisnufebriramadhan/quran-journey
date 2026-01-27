@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:quran_tracker/features/prayer_time/data/notification_service.dart';
-
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tzdata;
 
@@ -44,25 +43,17 @@ import 'features/settings/persentation/prayer_settings_page.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ================================
-  // 🌍 TIMEZONE (WAJIB)
-  // ================================
+  // Initialize timezone
   tzdata.initializeTimeZones();
   tz.setLocalLocation(tz.getLocation('Asia/Jakarta'));
 
-  // ================================
-  // 🔔 NOTIFICATION INIT
-  // ================================
+  // Initialize notification service
   await NotificationService().init();
 
-  // ================================
-  // 🔧 SERVICE LOCATOR
-  // ================================
+  // Initialize service locator
   sl.init();
 
-  // ================================
-  // 🔊 AUDIO SERVICE
-  // ================================
+  // Initialize audio service
   audioHandler = await AudioService.init(
     builder: () => QuranAudioHandler(),
     config: const AudioServiceConfig(
@@ -76,47 +67,111 @@ Future<void> main() async {
   runApp(const QuranTrackerApp());
 }
 
-class QuranTrackerApp extends StatelessWidget {
+class QuranTrackerApp extends StatefulWidget {
   const QuranTrackerApp({super.key});
+
+  @override
+  State<QuranTrackerApp> createState() => _QuranTrackerAppState();
+}
+
+class _QuranTrackerAppState extends State<QuranTrackerApp>
+    with WidgetsBindingObserver {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  AppLifecycleState? _lastLifecycleState;
+  DateTime? _lastPausedTime;
+
+  static const int _appKillThresholdSeconds = 2;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.paused) {
+      _lastPausedTime = DateTime.now();
+    }
+
+    if (state == AppLifecycleState.resumed) {
+      _handleAppResumed();
+    }
+
+    _lastLifecycleState = state;
+  }
+
+  void _handleAppResumed() {
+    // First launch - do nothing
+    if (_lastLifecycleState == null) {
+      _lastLifecycleState = AppLifecycleState.resumed;
+      return;
+    }
+
+    // Check if app was killed or significantly paused
+    final timeSincePaused = _lastPausedTime != null
+        ? DateTime.now().difference(_lastPausedTime!).inSeconds
+        : 0;
+
+    final wasKilled = _lastLifecycleState == AppLifecycleState.detached ||
+        timeSincePaused > _appKillThresholdSeconds;
+
+    if (wasKilled) {
+      _resetToHome();
+    }
+  }
+
+  void _resetToHome() {
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+
+      final context = _navigatorKey.currentContext;
+      if (context == null) return;
+
+      // ignore: use_build_context_synchronously
+      final currentRoute = ModalRoute.of(context)?.settings.name;
+
+      // Skip reset if already at gate/splash
+      if (currentRoute == AppRoutes.gate || currentRoute == null) {
+        return;
+      }
+
+      _navigatorKey.currentState?.pushNamedAndRemoveUntil(
+        AppRoutes.home,
+        (route) => false,
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // ===== AUTH =====
-        ChangeNotifierProvider(
-          create: (_) => AuthProvider(),
-        ),
-
-        // ===== QURAN LOG =====
-        ChangeNotifierProvider(
-          create: (_) => QuranLogProvider(),
-        ),
-
-        // ===== SETTINGS =====
-        ChangeNotifierProvider(
-          create: (_) => SettingsProvider()..load(),
-        ),
-
-        // ===== PRAYER TIME =====
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => QuranLogProvider()),
+        ChangeNotifierProvider(create: (_) => SettingsProvider()..load()),
         ChangeNotifierProxyProvider<SettingsProvider, PrayerTimeProvider>(
           create: (_) => PrayerTimeProvider(),
           update: (_, settingsProvider, prayerTimeProvider) {
-            prayerTimeProvider!.updateSettings(
-              settingsProvider.settings,
-            );
+            prayerTimeProvider!.updateSettings(settingsProvider.settings);
             return prayerTimeProvider;
           },
         ),
       ],
       child: MaterialApp(
-        title: 'Quran Tracker',
+        title: 'Quran Journey',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
-
-        /// ⛳ START POINT
+        navigatorKey: _navigatorKey,
         initialRoute: AppRoutes.gate,
-
         routes: {
           AppRoutes.gate: (_) => const AuthGate(),
           AppRoutes.login: (_) => const LoginPage(),

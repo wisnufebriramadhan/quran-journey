@@ -85,7 +85,7 @@ class QuranDownloadService {
       }
     } catch (e) {
       // Ignore error untuk single page, lanjut download page lain
-      print('Error downloading page $pageNumber: $e');
+      // print('Error downloading page $pageNumber: $e');
     }
   }
 
@@ -109,7 +109,7 @@ class QuranDownloadService {
       
       return verses;
     } catch (e) {
-      print('Error reading cache for page $pageNumber: $e');
+      // print('Error reading cache for page $pageNumber: $e');
       return [];
     }
   }

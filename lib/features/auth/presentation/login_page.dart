@@ -236,12 +236,12 @@ class _LoginPageState extends State<LoginPage>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              const Text(
                                 'Login',
                                 style: TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF5D4037),
+                                  color: Color(0xFF5D4037),
                                   letterSpacing: 0.3,
                                 ),
                               ),
@@ -256,12 +256,12 @@ class _LoginPageState extends State<LoginPage>
                               const SizedBox(height: 32),
 
                               /// Email Field
-                              Text(
+                              const Text(
                                 'Email',
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF5D4037),
+                                  color: Color(0xFF5D4037),
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -310,12 +310,12 @@ class _LoginPageState extends State<LoginPage>
                               const SizedBox(height: 24),
 
                               /// Password Field
-                              Text(
+                              const Text(
                                 'Password',
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF5D4037),
+                                  color: Color(0xFF5D4037),
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -377,6 +377,7 @@ class _LoginPageState extends State<LoginPage>
                               const SizedBox(height: 32),
 
                               /// Login Button
+                              /// Login Button
                               Container(
                                 width: double.infinity,
                                 height: 56,
@@ -406,12 +407,27 @@ class _LoginPageState extends State<LoginPage>
                                               emailController.text.trim(),
                                               passwordController.text.trim(),
                                             );
+
                                             if (!mounted) return;
-                                            Navigator.pushReplacementNamed(
-                                              context,
-                                              AppRoutes.home,
-                                            );
+
+                                            // ✅ PERBAIKAN: Pop dengan result true untuk kembali ke menu_grid
+                                            // Cek apakah ada previous route (dipanggil dari protected menu)
+                                            // ignore: use_build_context_synchronously
+                                            if (Navigator.canPop(context)) {
+                                              // Ada previous route, pop dengan result true
+                                              // ignore: use_build_context_synchronously
+                                              Navigator.pop(context, true);
+                                            } else {
+                                              // Tidak ada previous route (akses langsung), push ke home
+                                              Navigator.pushReplacementNamed(
+                                                // ignore: use_build_context_synchronously
+                                                context,
+                                                AppRoutes.home,
+                                              );
+                                            }
                                           } catch (e) {
+                                            if (!mounted) return;
+                                            // ignore: use_build_context_synchronously
                                             ScaffoldMessenger.of(context)
                                                 .showSnackBar(
                                               SnackBar(
@@ -475,7 +491,6 @@ class _LoginPageState extends State<LoginPage>
                                         ),
                                 ),
                               ),
-
                               const SizedBox(height: 24),
 
                               /// Register Link
@@ -602,7 +617,7 @@ class StarPatternPainter extends CustomPainter {
   void _drawStar(Canvas canvas, Offset center, double size, Paint paint) {
     final path = Path();
     const points = 5;
-    final angle = (pi * 2) / points;
+    const angle = (pi * 2) / points;
 
     for (int i = 0; i < points * 2; i++) {
       final r = i.isEven ? size : size / 2;

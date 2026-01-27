@@ -4,6 +4,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:quran_tracker/core/models/attendance_model.dart';
 import 'package:quran_tracker/features/learning/data/learning_service.dart';
 import 'package:quran_tracker/features/learning/data/service_locator.dart';
+import 'package:quran_tracker/features/learning/widget/widget_helper.dart';
+import 'package:quran_tracker/features/shimmer_loading_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LearningPage extends StatefulWidget {
@@ -75,8 +77,8 @@ class _LearningPageState extends State<LearningPage> {
           _getCurrentLocation();
         }
       }
+    // ignore: empty_catches
     } catch (e) {
-      print('Refresh error: $e');
     }
   }
 
@@ -147,11 +149,17 @@ class _LearningPageState extends State<LearningPage> {
   }
 
   Future<void> _getCurrentLocation() async {
+    if (!mounted) return;
+
+    // ✅ Show shimmer loading dialog
+    ShimmerLoadingDialog.show(context, message: 'Mendapatkan lokasi...');
+
     setState(() => _isCheckingLocation = true);
 
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
+        if (mounted) ShimmerLoadingDialog.hide(context);
         setState(() => _isCheckingLocation = false);
         _showError('GPS tidak aktif. Silakan aktifkan GPS.');
         return;
@@ -161,6 +169,7 @@ class _LearningPageState extends State<LearningPage> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
+          if (mounted) ShimmerLoadingDialog.hide(context);
           setState(() => _isCheckingLocation = false);
           _showError('Izin lokasi ditolak');
           return;
@@ -168,6 +177,7 @@ class _LearningPageState extends State<LearningPage> {
       }
 
       if (permission == LocationPermission.deniedForever) {
+        if (mounted) ShimmerLoadingDialog.hide(context);
         setState(() => _isCheckingLocation = false);
         _showError('Izin lokasi ditolak permanen. Aktifkan di pengaturan.');
         return;
@@ -179,7 +189,10 @@ class _LearningPageState extends State<LearningPage> {
 
       setState(() => _currentPosition = position);
       await _checkIfInRange(position.latitude, position.longitude);
+
+      if (mounted) ShimmerLoadingDialog.hide(context);
     } catch (e) {
+      if (mounted) ShimmerLoadingDialog.hide(context);
       setState(() => _isCheckingLocation = false);
       _showError('Gagal mendapatkan lokasi: $e');
     } finally {
@@ -199,6 +212,11 @@ class _LearningPageState extends State<LearningPage> {
       return;
     }
 
+    if (!mounted) return;
+
+    // ✅ Show shimmer loading dialog
+    ShimmerLoadingDialog.show(context, message: 'Mengirim absensi...');
+
     setState(() => _isSubmitting = true);
 
     try {
@@ -207,6 +225,8 @@ class _LearningPageState extends State<LearningPage> {
         _currentPosition!.longitude,
       );
 
+      if (mounted) ShimmerLoadingDialog.hide(context);
+
       if (response['success'] == true) {
         _showSuccess(response['message'] ?? 'Absensi berhasil!');
         await _loadAttendanceStatus();
@@ -214,6 +234,8 @@ class _LearningPageState extends State<LearningPage> {
         _showError(response['message'] ?? 'Gagal melakukan absensi');
       }
     } catch (e) {
+      if (mounted) ShimmerLoadingDialog.hide(context);
+
       String errorMessage = e.toString();
 
       if (errorMessage.startsWith('Exception: ')) {
@@ -337,8 +359,11 @@ class _LearningPageState extends State<LearningPage> {
                     end: Alignment.bottomRight,
                   ),
                 ),
+                // ✅ Ganti CircularProgressIndicator dengan ShimmerLoadingWidget
                 child: const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
+                  child: ShimmerLoadingDialog(
+                    message: 'Memuat pembelajaran...',
+                  ),
                 ),
               )
             : Container(
@@ -417,7 +442,7 @@ class _LearningPageState extends State<LearningPage> {
                         child: Row(
                           children: [
                             Expanded(
-                              child: _StatCard(
+                              child: StatCard(
                                 icon: '📅',
                                 label: 'Hari Ini',
                                 value: DateTime.now().day.toString(),
@@ -425,7 +450,7 @@ class _LearningPageState extends State<LearningPage> {
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: _StatCard(
+                              child: StatCard(
                                 icon: _hasAttended ? '✅' : '❌',
                                 label: 'Status',
                                 value: _hasAttended ? 'Hadir' : 'Belum',
@@ -433,7 +458,7 @@ class _LearningPageState extends State<LearningPage> {
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: _StatCard(
+                              child: StatCard(
                                 icon: '📍',
                                 label: 'Radius',
                                 value: '${_officeLocation?.radius ?? 100}m',
@@ -618,29 +643,29 @@ class _LearningPageState extends State<LearningPage> {
       ),
       child: Column(
         children: [
-          _InfoRow(
+          InfoRow(
             icon: '⏰',
             label: 'Waktu Absen',
             value: _attendance!.time ?? '-',
           ),
           const Divider(height: 24),
-          _InfoRow(
+          InfoRow(
             icon: '📍',
             label: 'Latitude',
             value: _attendance!.latitude?.toStringAsFixed(6) ?? '-',
           ),
           const Divider(height: 24),
-          _InfoRow(
+          InfoRow(
             icon: '📍',
             label: 'Longitude',
             value: _attendance!.longitude?.toStringAsFixed(6) ?? '-',
           ),
           const Divider(height: 24),
-          _InfoRow(
+          const InfoRow(
             icon: '🎯',
             label: 'Status',
             value: 'Hadir',
-            valueColor: const Color(0xFF10b981),
+            valueColor: Color(0xFF10b981),
           ),
         ],
       ),
@@ -654,43 +679,6 @@ class _LearningPageState extends State<LearningPage> {
 
     return Column(
       children: [
-        if (_isCheckingLocation) ...[
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.3),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor:
-                        const AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text(
-                    'Memeriksa lokasi Anda...',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-        ],
         if (!_isCheckingLocation &&
             _currentPosition != null &&
             _inRange != null) ...[
@@ -776,35 +764,25 @@ class _LearningPageState extends State<LearningPage> {
               ),
               minimumSize: const Size(double.infinity, 56),
             ),
-            child: _isSubmitting
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(Color(0xFF5D4037)),
-                    ),
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        isOutOfRange
-                            ? Icons.location_off_rounded
-                            : Icons.location_on_rounded,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        isOutOfRange ? 'Diluar Jangkauan' : 'Absen Sekarang',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  isOutOfRange
+                      ? Icons.location_off_rounded
+                      : Icons.location_on_rounded,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  isOutOfRange ? 'Diluar Jangkauan' : 'Absen Sekarang',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -859,7 +837,7 @@ class _LearningPageState extends State<LearningPage> {
       childAspectRatio: 1.0,
       padding: EdgeInsets.zero,
       children: [
-        _LearningCategoryCard(
+        LearningCategoryCard(
           title: 'Tajwid',
           icon: Icons.book_rounded,
           gradient: const LinearGradient(
@@ -867,7 +845,7 @@ class _LearningPageState extends State<LearningPage> {
           ),
           onTap: () => _showComingSoon(context, 'Tajwid'),
         ),
-        _LearningCategoryCard(
+        LearningCategoryCard(
           title: 'Tafsir',
           icon: Icons.import_contacts_rounded,
           gradient: const LinearGradient(
@@ -875,7 +853,7 @@ class _LearningPageState extends State<LearningPage> {
           ),
           onTap: () => _showComingSoon(context, 'Tafsir'),
         ),
-        _LearningCategoryCard(
+        LearningCategoryCard(
           title: 'Hadits',
           icon: Icons.menu_book_rounded,
           gradient: const LinearGradient(
@@ -883,7 +861,7 @@ class _LearningPageState extends State<LearningPage> {
           ),
           onTap: () => _showComingSoon(context, 'Hadits'),
         ),
-        _LearningCategoryCard(
+        LearningCategoryCard(
           title: 'Doa Harian',
           icon: Icons.favorite_rounded,
           gradient: const LinearGradient(
@@ -891,7 +869,7 @@ class _LearningPageState extends State<LearningPage> {
           ),
           onTap: () => _showComingSoon(context, 'Doa Harian'),
         ),
-        _LearningCategoryCard(
+        LearningCategoryCard(
           title: 'Bahasa Arab',
           icon: Icons.language_rounded,
           gradient: const LinearGradient(
@@ -899,196 +877,13 @@ class _LearningPageState extends State<LearningPage> {
           ),
           onTap: () => _showComingSoon(context, 'Bahasa Arab'),
         ),
-        _LearningCategoryCard(
+        LearningCategoryCard(
           title: 'Video Tutorial',
           icon: Icons.play_circle_filled_rounded,
           gradient: const LinearGradient(
             colors: [Color(0xFF7B5E57), Color(0xFFa1887f)],
           ),
           onTap: () => _showComingSoon(context, 'Video Tutorial'),
-        ),
-      ],
-    );
-  }
-}
-
-// ================= HELPER WIDGETS =================
-class _StatCard extends StatelessWidget {
-  final String icon;
-  final String label;
-  final String value;
-
-  const _StatCard({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.white.withOpacity(0.25),
-            Colors.white.withOpacity(0.15),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          Text(icon, style: const TextStyle(fontSize: 28)),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: Colors.white.withOpacity(0.8),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LearningCategoryCard extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final Gradient gradient;
-  final VoidCallback onTap;
-
-  const _LearningCategoryCard({
-    required this.title,
-    required this.icon,
-    required this.gradient,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          colors: [Colors.white, Color(0xFFFFFBF5)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF5D4037).withOpacity(0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(24),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    gradient: gradient,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF5D4037).withOpacity(0.4),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    icon,
-                    color: Colors.white,
-                    size: 34,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13.5,
-                    color: Color(0xFF5D4037),
-                    letterSpacing: 0.2,
-                    height: 1.3,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final String icon;
-  final String label;
-  final String value;
-  final Color? valueColor;
-
-  const _InfoRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.valueColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(icon, style: const TextStyle(fontSize: 20)),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.black.withOpacity(0.6),
-            ),
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: valueColor ?? const Color(0xFF1f2937),
-          ),
         ),
       ],
     );

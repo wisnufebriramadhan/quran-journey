@@ -9,19 +9,10 @@ class LearningService {
   /// Get today's attendance status
   Future<Map<String, dynamic>> getAttendanceStatus() async {
     try {
-      print('📡 Request to: /api/learning');
-
       final response = await api.dio.get('/api/learning');
-
-      print('📥 Response status: ${response.statusCode}');
-      print('📥 Response data: ${response.data}');
 
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
-      print('❌ DioException: ${e.type}');
-      print('❌ Status code: ${e.response?.statusCode}');
-      print('❌ Response data: ${e.response?.data}');
-      
       throw _handleError(e);
     }
   }
@@ -29,7 +20,7 @@ class LearningService {
   /// Check if location is in range
   Future<Map<String, dynamic>> checkLocation(double lat, double lng) async {
     try {
-      print('📡 Check location: $lat, $lng');
+      // print('📡 Check location: $lat, $lng');
 
       final response = await api.dio.post(
         '/api/learning/check-location',
@@ -39,11 +30,11 @@ class LearningService {
         },
       );
 
-      print('📥 Response: ${response.statusCode} - ${response.data}');
+      // print('📥 Response: ${response.statusCode} - ${response.data}');
 
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
-      print('❌ Check location error: ${e.response?.data}');
+      // print('❌ Check location error: ${e.response?.data}');
       throw _handleError(e);
     }
   }
@@ -51,7 +42,7 @@ class LearningService {
   /// Submit attendance
   Future<Map<String, dynamic>> submitAttendance(double lat, double lng) async {
     try {
-      print('📡 Submit attendance: $lat, $lng');
+      // print('📡 Submit attendance: $lat, $lng');
 
       final response = await api.dio.post(
         '/api/learning/attend',
@@ -61,11 +52,11 @@ class LearningService {
         },
       );
 
-      print('📥 Response: ${response.statusCode} - ${response.data}');
+      // print('📥 Response: ${response.statusCode} - ${response.data}');
 
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
-      print('❌ Submit attendance error: ${e.response?.data}');
+      // print('❌ Submit attendance error: ${e.response?.data}');
       throw _handleError(e);
     }
   }
@@ -75,7 +66,7 @@ class LearningService {
     try {
       final response = await api.dio.get('/api/learning/history');
 
-      print('📥 History response: ${response.data}');
+      // print('📥 History response: ${response.data}');
 
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
@@ -95,7 +86,7 @@ class LearningService {
         if (data['message'] != null) {
           return data['message'].toString();
         }
-        
+
         // Cek apakah ada errors (validation errors)
         if (data['errors'] != null) {
           final errors = data['errors'] as Map<String, dynamic>;

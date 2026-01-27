@@ -15,10 +15,6 @@ class NotificationService {
 
   bool _initialized = false;
 
-  Future<void> init() async {
-    await initialize();
-  }
-
   // Notification IDs
   static const int fajrId = 1;
   static const int dhuhrId = 2;
@@ -34,7 +30,14 @@ class NotificationService {
   static const String _maghribEnabledKey = 'maghrib_notification_enabled';
   static const String _ishaEnabledKey = 'isha_notification_enabled';
 
-  /// ================= INITIALIZATION =================
+  // Audio file name (tanpa extension)
+  static const String _audioFile = 'audio';
+
+  Future<void> init() async {
+    await initialize();
+  }
+
+  /// Initialize notification service
   Future<void> initialize() async {
     if (_initialized) return;
 
@@ -63,18 +66,15 @@ class NotificationService {
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
 
-    // Create notification channels
     await _createNotificationChannels();
-
     await Permission.notification.request();
     await Permission.scheduleExactAlarm.request();
 
     _initialized = true;
   }
 
-  /// ================= CREATE NOTIFICATION CHANNELS =================
+  /// Create Android notification channels
   Future<void> _createNotificationChannels() async {
-    // Channel with sound
     const soundChannel = AndroidNotificationChannel(
       'prayer_sound_channel',
       'Prayer With Sound',
@@ -82,15 +82,14 @@ class NotificationService {
       importance: Importance.high,
       playSound: true,
       enableVibration: true,
-      sound: RawResourceAndroidNotificationSound('notification'),
+      sound: RawResourceAndroidNotificationSound(_audioFile),
     );
 
-    // Channel silent (NO SOUND)
     const silentChannel = AndroidNotificationChannel(
       'prayer_silent_channel',
       'Prayer Silent',
       description: 'Notifikasi waktu sholat tanpa suara',
-      importance: Importance.high, // PENTING: tetap high agar muncul
+      importance: Importance.high,
       playSound: false,
       enableVibration: false,
       sound: null,
@@ -105,7 +104,7 @@ class NotificationService {
     }
   }
 
-  /// ================= PERMISSION =================
+  /// Request notification permission
   Future<bool> requestPermission() async {
     if (await Permission.notification.isGranted) {
       return true;
@@ -115,7 +114,7 @@ class NotificationService {
     return status.isGranted;
   }
 
-  /// ================= SCHEDULE PRAYER NOTIFICATIONS =================
+  /// Schedule prayer notifications for the day
   Future<void> schedulePrayerNotifications(PrayerTimes prayerTimes) async {
     if (!_initialized) await initialize();
 
@@ -127,10 +126,8 @@ class NotificationService {
       return;
     }
 
-    // Cancel existing notifications
     await cancelAllNotifications();
 
-    // Schedule each prayer
     await _schedulePrayer(
       id: fajrId,
       time: prayerTimes.fajr,
@@ -172,6 +169,7 @@ class NotificationService {
     );
   }
 
+  /// Schedule individual prayer notification
   Future<void> _schedulePrayer({
     required int id,
     required DateTime time,
@@ -180,32 +178,21 @@ class NotificationService {
     required String prefKey,
   }) async {
     final prefs = await SharedPreferences.getInstance();
+    final soundEnabled = prefs.getBool(prefKey) ?? true;
 
-    // ON = bersuara
-    // OFF = silent
-    final bool soundEnabled = prefs.getBool(prefKey) ?? true;
-
-    // Convert to TZ DateTime
     final scheduledTime = tz.TZDateTime.from(time, tz.local);
     final now = tz.TZDateTime.now(tz.local);
 
-    // If time has passed today, schedule for today (will trigger immediately if within grace period)
-    // Otherwise schedule for the exact time
     tz.TZDateTime scheduleTime;
     if (scheduledTime.isBefore(now)) {
-      // Jika waktu sudah lewat hari ini, jadwalkan untuk besok
       scheduleTime = scheduledTime.add(const Duration(days: 1));
     } else {
       scheduleTime = scheduledTime;
     }
 
-    // Pilih channel berdasarkan soundEnabled
     final channelId =
         soundEnabled ? 'prayer_sound_channel' : 'prayer_silent_channel';
     final channelName = soundEnabled ? 'Prayer With Sound' : 'Prayer Silent';
-
-    print(
-        '📅 Scheduling $title (ID: $id) at ${scheduleTime.toString()} - Sound: $soundEnabled - Channel: $channelId');
 
     try {
       await _notifications.zonedSchedule(
@@ -222,7 +209,7 @@ class NotificationService {
             priority: Priority.high,
             playSound: soundEnabled,
             sound: soundEnabled
-                ? const RawResourceAndroidNotificationSound('notifikasi')
+                ? const RawResourceAndroidNotificationSound(_audioFile)
                 : null,
             enableVibration: soundEnabled,
             icon: '@mipmap/ic_launcher',
@@ -233,23 +220,19 @@ class NotificationService {
             presentAlert: true,
             presentBadge: true,
             presentSound: soundEnabled,
-            sound: soundEnabled ? 'notifikasi.mp3' : null,
+            sound: soundEnabled ? 'audio.mp3' : null,
           ),
         ),
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
-        // PENTING: Jangan gunakan matchDateTimeComponents
-        // Ini menyebabkan notifikasi hanya dijadwalkan sekali
       );
-
-      print('✅ Successfully scheduled notification ID: $id');
     } catch (e) {
-      print('❌ Error scheduling notification ID $id: $e');
+      rethrow;
     }
   }
 
-  /// ================= INSTANT NOTIFICATION =================
+  /// Show instant notification
   Future<void> showInstantNotification({
     required String title,
     required String body,
@@ -284,98 +267,62 @@ class NotificationService {
     );
   }
 
-  /// ================= CANCEL NOTIFICATIONS =================
+  /// Cancel all scheduled notifications
   Future<void> cancelAllNotifications() async {
     await _notifications.cancelAll();
   }
 
+  /// Cancel specific notification by ID
   Future<void> cancelNotification(int id) async {
     await _notifications.cancel(id);
   }
 
-  /// ================= SETTINGS =================
+  /// Enable/disable all notifications
   Future<void> setNotificationsEnabled(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_enabledKey, enabled);
   }
 
+  /// Check if notifications are enabled
   Future<bool> getNotificationsEnabled() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_enabledKey) ?? true;
   }
 
+  /// Enable/disable notification for specific prayer
   Future<void> setPrayerNotificationEnabled(Prayer prayer, bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
-    String key;
-
-    switch (prayer) {
-      case Prayer.fajr:
-        key = _fajrEnabledKey;
-        break;
-      case Prayer.dhuhr:
-        key = _dhuhrEnabledKey;
-        break;
-      case Prayer.asr:
-        key = _asrEnabledKey;
-        break;
-      case Prayer.maghrib:
-        key = _maghribEnabledKey;
-        break;
-      case Prayer.isha:
-        key = _ishaEnabledKey;
-        break;
-      default:
-        return;
+    final key = _getPrayerPreferenceKey(prayer);
+    if (key != null) {
+      await prefs.setBool(key, enabled);
     }
-
-    await prefs.setBool(key, enabled);
   }
 
+  /// Check if notification is enabled for specific prayer
   Future<bool> getPrayerNotificationEnabled(Prayer prayer) async {
     final prefs = await SharedPreferences.getInstance();
-    String key;
-
-    switch (prayer) {
-      case Prayer.fajr:
-        key = _fajrEnabledKey;
-        break;
-      case Prayer.dhuhr:
-        key = _dhuhrEnabledKey;
-        break;
-      case Prayer.asr:
-        key = _asrEnabledKey;
-        break;
-      case Prayer.maghrib:
-        key = _maghribEnabledKey;
-        break;
-      case Prayer.isha:
-        key = _ishaEnabledKey;
-        break;
-      default:
-        return false;
-    }
-
-    return prefs.getBool(key) ?? true;
+    final key = _getPrayerPreferenceKey(prayer);
+    return key != null ? (prefs.getBool(key) ?? true) : false;
   }
 
-  /// ================= CALLBACK =================
+  /// Get preference key for prayer
+  String? _getPrayerPreferenceKey(Prayer prayer) {
+    return switch (prayer) {
+      Prayer.fajr => _fajrEnabledKey,
+      Prayer.dhuhr => _dhuhrEnabledKey,
+      Prayer.asr => _asrEnabledKey,
+      Prayer.maghrib => _maghribEnabledKey,
+      Prayer.isha => _ishaEnabledKey,
+      _ => null,
+    };
+  }
+
+  /// Handle notification tap
   void _onNotificationTapped(NotificationResponse response) {
-    // Handle notification tap
-    // You can navigate to specific page here
-    print('Notification tapped: ${response.payload}');
   }
 
-  /// ================= GET PENDING NOTIFICATIONS =================
+  /// Get list of pending notifications
   Future<List<PendingNotificationRequest>> getPendingNotifications() async {
     return await _notifications.pendingNotificationRequests();
-  }
-
-  /// ================= DEBUG: PRINT PENDING NOTIFICATIONS =================
-  Future<void> printPendingNotifications() async {
-    final pending = await getPendingNotifications();
-    print('📋 Pending Notifications: ${pending.length}');
-    for (var notif in pending) {
-      print('  - ID: ${notif.id}, Title: ${notif.title}, Body: ${notif.body}');
-    }
   }
 }

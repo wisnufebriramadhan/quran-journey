@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:quran_tracker/features/quran_log/presentation/widgets/calendar_widget.dart';
+import 'package:quran_tracker/features/shimmer_loading_dialog.dart';
 import '../quran_log_provider.dart';
 import 'widgets/add_log_button.dart';
 import 'widgets/log_item.dart';
@@ -28,6 +29,7 @@ class _QuranLogPageState extends State<QuranLogPage> {
   Widget build(BuildContext context) {
     final provider = context.watch<QuranLogProvider>();
 
+    // ✅ Loading state dengan ShimmerLoadingWidget
     if (provider.loading) {
       return Scaffold(
         body: Container(
@@ -44,12 +46,13 @@ class _QuranLogPageState extends State<QuranLogPage> {
             ),
           ),
           child: const Center(
-            child: CircularProgressIndicator(color: Colors.white),
+            child: ShimmerLoadingDialog(message: 'Memuat catatan...'),
           ),
         ),
       );
     }
 
+    // ✅ Error state dengan styling yang lebih baik
     if (provider.error != null) {
       return Scaffold(
         body: Container(
@@ -66,9 +69,54 @@ class _QuranLogPageState extends State<QuranLogPage> {
             ),
           ),
           child: Center(
-            child: Text(
-              provider.error!,
-              style: const TextStyle(color: Colors.white),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.error_outline,
+                    color: Colors.white,
+                    size: 48,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 48),
+                  child: Text(
+                    provider.error!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    context.read<QuranLogProvider>().fetchLogs();
+                  },
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Coba Lagi'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFF5D4037),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),

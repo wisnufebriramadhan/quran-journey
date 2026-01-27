@@ -864,9 +864,9 @@ class _EnhancedSurahHeaderPainter extends CustomPainter {
     paint.style = PaintingStyle.stroke;
 
     // Top border with decorative pattern
-    canvas.drawLine(Offset(0, 3), Offset(size.width, 3), paint);
+    canvas.drawLine(const Offset(0, 3), Offset(size.width, 3), paint);
     canvas.drawLine(
-        Offset(0, 6), Offset(size.width, 6), paint..strokeWidth = 1);
+        const Offset(0, 6), Offset(size.width, 6), paint..strokeWidth = 1);
 
     // Bottom border
     canvas.drawLine(
@@ -887,7 +887,7 @@ class _EnhancedSurahHeaderPainter extends CustomPainter {
     // Corner flowers
     const cornerSize = 12.0;
     final corners = [
-      Offset(cornerSize, cornerSize),
+      const Offset(cornerSize, cornerSize),
       Offset(size.width - cornerSize, cornerSize),
       Offset(cornerSize, size.height - cornerSize),
       Offset(size.width - cornerSize, size.height - cornerSize),

@@ -1,8 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-import '../../auth/auth_provider.dart';
 import '../../../routes/app_routes.dart';
 
 class SplashPage extends StatefulWidget {
@@ -78,15 +76,10 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   Future<void> _init() async {
     await Future.delayed(const Duration(milliseconds: 3000));
 
-    final auth = context.read<AuthProvider>();
-
     if (!mounted) return;
 
-    if (auth.isLoggedIn) {
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
-    } else {
-      Navigator.pushReplacementNamed(context, AppRoutes.login);
-    }
+    // Langsung ke home tanpa cek auth
+    Navigator.pushReplacementNamed(context, AppRoutes.home);
   }
 
   @override
@@ -260,13 +253,12 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
 
                       const SizedBox(height: 60),
 
-                      // Loading indicator with custom design
+                      // Loading indicator
                       SizedBox(
                         width: 50,
                         height: 50,
                         child: Stack(
                           children: [
-                            // Outer rotating circle
                             AnimatedBuilder(
                               animation: _rotateController,
                               builder: (context, child) {
@@ -285,7 +277,6 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                                 );
                               },
                             ),
-                            // Inner rotating circle
                             Center(
                               child: AnimatedBuilder(
                                 animation: _rotateController,
@@ -334,7 +325,6 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                     padding: const EdgeInsets.all(32),
                     child: Column(
                       children: [
-                        // Decorative line
                         Container(
                           height: 2,
                           width: 60,
@@ -442,7 +432,7 @@ class AnimatedStarsPainter extends CustomPainter {
   void _drawStar(Canvas canvas, Offset center, double size, Paint paint) {
     final path = Path();
     const points = 5;
-    final angle = (pi * 2) / points;
+    const angle = (pi * 2) / points;
 
     for (int i = 0; i < points * 2; i++) {
       final r = i.isEven ? size : size / 2;

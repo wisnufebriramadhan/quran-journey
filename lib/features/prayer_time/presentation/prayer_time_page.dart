@@ -1080,7 +1080,7 @@ class StarPatternPainter extends CustomPainter {
   void _drawStar(Canvas canvas, Offset center, double size, Paint paint) {
     final path = Path();
     const points = 5;
-    final angle = (pi * 2) / points;
+    const angle = (pi * 2) / points;
 
     for (int i = 0; i < points * 2; i++) {
       final r = i.isEven ? size : size / 2;

@@ -8,6 +8,7 @@ class AuthProvider extends ChangeNotifier {
   final FlutterSecureStorage storage = const FlutterSecureStorage();
 
   bool isLoading = false;
+  bool _isInitialized = false; // ✅ Tambahkan flag ini
   String? token;
 
   AuthProvider() : repository = AuthRepository(ApiClient()) {
@@ -18,11 +19,18 @@ class AuthProvider extends ChangeNotifier {
   // INIT
   // =========================
   Future<void> _loadToken() async {
+    isLoading = true;
+    notifyListeners();
+
     token = await storage.read(key: 'token');
+
+    isLoading = false;
+    _isInitialized = true; // ✅ Set true setelah selesai load
     notifyListeners();
   }
 
   bool get isLoggedIn => token != null;
+  bool get isInitialized => _isInitialized; // ✅ Getter untuk cek sudah init
 
   // =========================
   // LOGIN

@@ -13,7 +13,7 @@ class QuranLogRepository {
   Future<List<QuranLog>> getLogs() async {
     final res = await api.dio.get('/api/quran/logs');
 
-    print('RAW RESPONSE: ${res.data}');
+    // print('RAW RESPONSE: ${res.data}');
 
     final List list = res.data as List;
 
