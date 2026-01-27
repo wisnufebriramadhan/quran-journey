@@ -11,18 +11,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout source
+      # 1. Checkout source
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Java (Android build)
+      # 2. Setup Java (Android)
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
-      # Flutter (LOCK VERSION)
+      # 3. Setup Flutter (LOCK VERSION – penting!)
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
@@ -30,50 +30,58 @@ jobs:
           channel: stable
           cache: false
 
-      # Show version (debug)
+      # 4. Debug flutter version
       - name: Flutter version
         run: flutter --version
 
-      # Get app version from pubspec.yaml
+      # 5. Ambil version dari pubspec.yaml
       - name: Get app version
         id: app_version
         run: |
           VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d+ -f1)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      # Dependencies
+      # 6. Install dependencies
       - name: Install dependencies
         run: flutter pub get
 
-      # Clean
+      # 7. Clean
       - name: Flutter clean
         run: flutter clean
 
-      # Build SPLIT APK
+      # 8. Build APK (split ABI)
       - name: Build split APK
         run: flutter build apk --release --split-per-abi
 
-      # Rename APK files
+      # 9. Rename APK files
       - name: Rename APKs
         run: |
-          mkdir release-apk
-          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk release-apk/quran-journey-v${{ steps.app_version.outputs.version }}-arm64-v8a.apk
-          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk release-apk/quran-journey-v${{ steps.app_version.outputs.version }}-armeabi-v7a.apk
-          mv build/app/outputs/flutter-apk/app-universal-release.apk release-apk/quran-journey-v${{ steps.app_version.outputs.version }}-universal.apk
+          mkdir -p release-apk
 
-      # Upload artifact (backup)
+          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
+             release-apk/quran-journey-v${{ steps.app_version.outputs.version }}-arm64-v8a.apk
+
+          mv build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk \
+             release-apk/quran-journey-v${{ steps.app_version.outputs.version }}-armeabi-v7a.apk || true
+
+          mv build/app/outputs/flutter-apk/app-x86_64-release.apk \
+             release-apk/quran-journey-v${{ steps.app_version.outputs.version }}-x86_64.apk || true
+
+      # 10. Upload artifact (backup)
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: quran-journey-apk
-          path: release-apk/
+          path: release-apk/*.apk
 
-      # Create GitHub Release
+      # 11. Create GitHub Release (AMAN walau rerun)
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.app_version.outputs.version }}
           name: Quran Journey v${{ steps.app_version.outputs.version }}
-          files: release-apk/*
+          draft: false
+          prerelease: false
+          files: release-apk/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
