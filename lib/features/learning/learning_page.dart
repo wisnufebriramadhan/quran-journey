@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
+import 'dart:math';
 import 'package:quran_tracker/core/models/attendance_model.dart';
 import 'package:quran_tracker/features/learning/data/learning_service.dart';
 import 'package:quran_tracker/features/learning/data/service_locator.dart';
@@ -77,9 +78,7 @@ class _LearningPageState extends State<LearningPage> {
           _getCurrentLocation();
         }
       }
-    // ignore: empty_catches
-    } catch (e) {
-    }
+    } catch (e) {}
   }
 
   Future<void> _loadAttendanceStatus() async {
@@ -151,7 +150,6 @@ class _LearningPageState extends State<LearningPage> {
   Future<void> _getCurrentLocation() async {
     if (!mounted) return;
 
-    // ✅ Show shimmer loading dialog
     ShimmerLoadingDialog.show(context, message: 'Mendapatkan lokasi...');
 
     setState(() => _isCheckingLocation = true);
@@ -214,7 +212,6 @@ class _LearningPageState extends State<LearningPage> {
 
     if (!mounted) return;
 
-    // ✅ Show shimmer loading dialog
     ShimmerLoadingDialog.show(context, message: 'Mengirim absensi...');
 
     setState(() => _isSubmitting = true);
@@ -345,6 +342,7 @@ class _LearningPageState extends State<LearningPage> {
         statusBarBrightness: Brightness.dark,
       ),
       child: Scaffold(
+        backgroundColor: const Color(0xFFFAFAFA),
         body: _isLoading
             ? Container(
                 decoration: const BoxDecoration(
@@ -353,193 +351,227 @@ class _LearningPageState extends State<LearningPage> {
                       Color(0xFF3E2723),
                       Color(0xFF4A3428),
                       Color(0xFF5D4037),
-                      Color(0xFF6D4C41),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                 ),
-                // ✅ Ganti CircularProgressIndicator dengan ShimmerLoadingWidget
                 child: const Center(
                   child: ShimmerLoadingDialog(
                     message: 'Memuat pembelajaran...',
                   ),
                 ),
               )
-            : Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Color(0xFF3E2723),
-                      Color(0xFF4A3428),
-                      Color(0xFF5D4037),
-                      Color(0xFF6D4C41),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: SafeArea(
-                  child: Column(
-                    children: [
-                      /// Header
-                      Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Row(
-                          children: [
-                            IconButton(
-                              onPressed: () => Navigator.pop(context),
-                              icon: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: Colors.white.withOpacity(0.2),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: const Icon(
-                                  Icons.arrow_back,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                            ),
-                            const SizedBox(width: 16),
-                            const Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Pembelajaran',
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    'Tingkatkan pemahaman Al-Quran',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.white70,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+            : Stack(
+                children: [
+                  /// BACKGROUND
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: MediaQuery.of(context).size.height * 0.35,
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(0xFF3E2723),
+                            Color(0xFF4A3428),
+                            Color(0xFF5D4037),
                           ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
                       ),
-
-                      /// Stats Cards
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: StatCard(
-                                icon: '📅',
-                                label: 'Hari Ini',
-                                value: DateTime.now().day.toString(),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: StatCard(
-                                icon: _hasAttended ? '✅' : '❌',
-                                label: 'Status',
-                                value: _hasAttended ? 'Hadir' : 'Belum',
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: StatCard(
-                                icon: '📍',
-                                label: 'Radius',
-                                value: '${_officeLocation?.radius ?? 100}m',
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      /// Content Area
-                      Expanded(
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFF8F9FA),
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(32),
-                              topRight: Radius.circular(32),
+                      child: Stack(
+                        children: [
+                          CustomPaint(
+                            painter: LearningBackgroundPainter(),
+                            size: Size(
+                              double.infinity,
+                              MediaQuery.of(context).size.height * 0.35,
                             ),
                           ),
-                          child: SingleChildScrollView(
-                            padding: const EdgeInsets.all(24),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                /// Attendance Card
-                                _buildAttendanceCard(),
-                                const SizedBox(height: 28),
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.black.withOpacity(0.1),
+                                  Colors.transparent,
+                                ],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
 
-                                /// Categories Title
-                                Row(
+                  /// CONTENT
+                  SafeArea(
+                    child: Column(
+                      children: [
+                        /// Header
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                          child: Row(
+                            children: [
+                              GestureDetector(
+                                onTap: () => Navigator.pop(context),
+                                child: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.2),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.arrow_back_rounded,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        gradient: const LinearGradient(
-                                          colors: [
-                                            Color(0xFF6D4C41),
-                                            Color(0xFF5D4037)
-                                          ],
-                                        ),
-                                        borderRadius: BorderRadius.circular(12),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: const Color(0xFF5D4037)
-                                                .withOpacity(0.3),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 4),
-                                          ),
-                                        ],
-                                      ),
-                                      child: const Icon(
-                                        Icons.school_rounded,
+                                    Text(
+                                      'Pembelajaran',
+                                      style: TextStyle(
+                                        fontSize: 26,
+                                        fontWeight: FontWeight.bold,
                                         color: Colors.white,
-                                        size: 20,
+                                        letterSpacing: -0.5,
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
-                                    const Text(
-                                      'Kategori Pembelajaran',
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Tingkatkan pemahaman Al-Quran',
                                       style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF3E2723),
+                                        fontSize: 12,
+                                        color: Colors.white.withOpacity(0.8),
                                       ),
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 16),
+                              ),
+                            ],
+                          ),
+                        ),
 
-                                /// Categories Grid
-                                _buildCategoriesGrid(),
-                              ],
+                        /// Stats Cards
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: StatCard(
+                                  icon: '📅',
+                                  label: 'Hari Ini',
+                                  value: DateTime.now().day.toString(),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: StatCard(
+                                  icon: _hasAttended ? '✅' : '❌',
+                                  label: 'Status',
+                                  value: _hasAttended ? 'Hadir' : 'Belum',
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: StatCard(
+                                  icon: '📍',
+                                  label: 'Radius',
+                                  value: '${_officeLocation?.radius ?? 100}m',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        /// Content Area
+                        Expanded(
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFFAFAFA),
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(32),
+                                topRight: Radius.circular(32),
+                              ),
+                            ),
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  /// Attendance Card
+                                  _buildAttendanceCard(),
+                                  const SizedBox(height: 28),
+
+                                  /// Categories Title
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          gradient: const LinearGradient(
+                                            colors: [
+                                              Color(0xFF6D4C41),
+                                              Color(0xFF5D4037)
+                                            ],
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(0xFF5D4037)
+                                                  .withOpacity(0.3),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                        child: const Icon(
+                                          Icons.school_rounded,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      const Text(
+                                        'Kategori Pembelajaran',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF3E2723),
+                                          letterSpacing: -0.3,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  /// Categories Grid
+                                  _buildCategoriesGrid(),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ),
       ),
     );
@@ -888,4 +920,55 @@ class _LearningPageState extends State<LearningPage> {
       ],
     );
   }
+}
+
+/// LEARNING BACKGROUND PAINTER
+class LearningBackgroundPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Decorative circles
+    final paint1 = Paint()
+      ..color = Colors.white.withOpacity(0.08)
+      ..style = PaintingStyle.fill;
+
+    canvas.drawCircle(Offset(size.width * 0.8, -50), 150, paint1);
+    canvas.drawCircle(Offset(-100, size.height * 0.5), 120, paint1);
+
+    // Grid pattern
+    final gridPaint = Paint()
+      ..color = Colors.white.withOpacity(0.03)
+      ..strokeWidth = 1;
+
+    const spacing = 60.0;
+    for (double i = 0; i < size.width; i += spacing) {
+      canvas.drawLine(
+        Offset(i, 0),
+        Offset(i, size.height),
+        gridPaint,
+      );
+    }
+
+    for (double i = 0; i < size.height; i += spacing) {
+      canvas.drawLine(
+        Offset(0, i),
+        Offset(size.width, i),
+        gridPaint,
+      );
+    }
+
+    // Accent dots
+    final dotPaint = Paint()
+      ..color = Colors.amber.withOpacity(0.1)
+      ..style = PaintingStyle.fill;
+
+    final random = Random(42);
+    for (int i = 0; i < 15; i++) {
+      final x = random.nextDouble() * size.width;
+      final y = random.nextDouble() * size.height;
+      canvas.drawCircle(Offset(x, y), 2.5, dotPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
