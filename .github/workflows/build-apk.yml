@@ -2,7 +2,8 @@ name: Build Quran Journey APK
 
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -10,29 +11,44 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
+      # 1. Checkout source code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2. Setup Java (WAJIB untuk Android build)
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "17"
 
+      # 3. Setup Flutter (LOCK VERSION + NO CACHE)
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.38.7"
+          flutter-version: "3.24.3"
           channel: stable
+          cache: false
 
-      - name: Get dependencies
+      # 4. Verify Flutter & Dart version (DEBUGGING FRIENDLY)
+      - name: Flutter version
+        run: flutter --version
+
+      # 5. Get dependencies
+      - name: Install dependencies
         run: flutter pub get
 
-      - name: Build APK Release
+      # 6. Clean build (HINDARI ERROR CACHE GRADLE)
+      - name: Flutter clean
+        run: flutter clean
+
+      # 7. Build APK Release
+      - name: Build APK (release)
         run: flutter build apk --release
 
-      - name: Upload APK artifact
+      # 8. Upload APK as artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: quran-journey-apk
+          name: quran-journey-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
