@@ -115,10 +115,10 @@ class _ShimmerLoadingDialogState extends State<ShimmerLoadingDialog>
               ),
               margin: const EdgeInsets.symmetric(horizontal: 40),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
+                gradient: const LinearGradient(
                   colors: [
                     Colors.white,
-                    const Color(0xFFFFFBF5),
+                    Color(0xFFFFFBF5),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -211,10 +211,10 @@ class _ShimmerLoadingDialogState extends State<ShimmerLoadingDialog>
                                 ),
                               ],
                             ),
-                            child: Center(
+                            child: const Center(
                               child: Icon(
                                 Icons.menu_book_rounded,
-                                color: const Color(0xFF6D4C41),
+                                color: Color(0xFF6D4C41),
                                 size: 36,
                               ),
                             ),

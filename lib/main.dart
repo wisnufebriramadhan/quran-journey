@@ -7,8 +7,8 @@ import 'package:timezone/data/latest.dart' as tzdata;
 
 import 'package:quran_tracker/features/learning/data/service_locator.dart';
 import 'package:quran_tracker/features/learning/learning_page.dart';
-import 'package:quran_tracker/features/quran/audio_locator.dart';
-import 'package:quran_tracker/features/quran/quran_audio_handler.dart';
+import 'package:quran_tracker/features/murattal/controller/audio_locator.dart';
+import 'package:quran_tracker/features/murattal/controller/quran_audio_handler.dart';
 
 // ===== CORE =====
 import 'core/constants/app_theme.dart';
@@ -26,15 +26,15 @@ import 'features/auth/presentation/register_page.dart';
 import 'features/home/home_page.dart';
 
 // ===== QURAN =====
-import 'features/quran/presentation/mushaf_page_view.dart';
+import 'features/mushaf/mushaf_page_view.dart';
 
 // ===== QURAN LOG =====
-import 'features/quran_log/quran_log_provider.dart';
-import 'features/quran_log/presentation/quran_log_page.dart';
+import 'features/quran_log/controller/quran_log_provider.dart';
+import 'features/quran_log/quran_log_page.dart';
 
 // ===== PRAYER TIME =====
-import 'features/prayer_time/prayer_time_provider.dart';
-import 'features/prayer_time/presentation/prayer_time_page.dart';
+import 'features/prayer_time/data/prayer_time_provider.dart';
+import 'features/prayer_time/prayer_time_page.dart';
 
 // ===== SETTINGS =====
 import 'features/settings/settings_provider.dart';

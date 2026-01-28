@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:audio_service/audio_service.dart';
-import 'package:quran_tracker/features/quran/audio_locator.dart';
-import 'package:quran_tracker/features/quran/quran_audio_handler.dart';
-import 'package:quran_tracker/features/quran/presentation/quran_audio_player_page.dart';
+import 'package:quran_tracker/features/murattal/controller/audio_locator.dart';
+import 'package:quran_tracker/features/murattal/controller/quran_audio_handler.dart';
+import 'package:quran_tracker/features/murattal/quran_audio_player_page.dart';
 
 class MurattalPlayerWidget extends StatefulWidget {
   const MurattalPlayerWidget({super.key});

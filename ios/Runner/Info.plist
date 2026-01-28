@@ -32,6 +32,11 @@
 	<string>Aplikasi membutuhkan lokasi untuk menentukan waktu sholat</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Aplikasi membutuhkan lokasi untuk menentukan waktu sholat</string>
+	
+	<!-- ✅ TAMBAHAN: Notification Permission Description -->
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>Kami membutuhkan izin notifikasi untuk mengingatkan Anda saat waktu sholat tiba.</string>
+	
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -39,12 +44,17 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	
+	<!-- ✅ SUDAH ADA - DIPERBAIKI: Tambah 'fetch' dan 'processing' -->
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
+		<string>fetch</string>
 		<string>location</string>
 		<string>remote-notification</string>
+		<string>processing</string>
 	</array>
+	
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -62,5 +72,11 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	
+	<!-- ✅ TAMBAHAN: File Sharing (opsional, untuk audio files) -->
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 </dict>
 </plist>

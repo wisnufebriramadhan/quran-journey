@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:quran_tracker/features/extentions.dart';
 import 'package:quran_tracker/features/home/providers/home_provider.dart';
-import 'package:quran_tracker/features/prayer_time/prayer_time_provider.dart';
+import 'package:quran_tracker/features/prayer_time/data/prayer_time_provider.dart';
 import 'murattal_player.dart';
 
 class HomeHeader extends StatelessWidget {

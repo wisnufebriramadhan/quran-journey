@@ -14,7 +14,7 @@ class SettingsProvider extends ChangeNotifier {
   static const _keyIshaOffset = 'isha_offset';
 
   SettingsModel _settings = const SettingsModel(
-    prayerMethod: PrayerMethodType.kemenag,
+    prayerMethod: PrayerMethodType.sihat,
     hijriMethod: HijriMethodType.kuwait,
   );
 

@@ -78,6 +78,7 @@ class _LearningPageState extends State<LearningPage> {
           _getCurrentLocation();
         }
       }
+    // ignore: empty_catches
     } catch (e) {}
   }
 
@@ -441,7 +442,7 @@ class _LearningPageState extends State<LearningPage> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
+                                    const Text(
                                       'Pembelajaran',
                                       style: TextStyle(
                                         fontSize: 26,

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:quran_tracker/features/shimmer_loading_dialog.dart';
 import 'package:quran_tracker/routes/app_routes.dart';
-import 'package:quran_tracker/features/quran/presentation/quran_audio_player_page.dart';
-import 'package:quran_tracker/features/home/home_page_widgets.dart';
+import 'package:quran_tracker/features/murattal/quran_audio_player_page.dart';
+import 'package:quran_tracker/features/home/widgets/home_page_widgets.dart';
 import 'package:quran_tracker/features/auth/auth_provider.dart';
 
 class MenuGrid extends StatelessWidget {

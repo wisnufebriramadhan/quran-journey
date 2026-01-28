@@ -10,7 +10,7 @@ class PrayerTimeService {
     final coordinates = Coordinates(latitude, longitude);
     final params = _paramsFromSettings(settings);
 
-    // ⏱️ Manual Offset (slider -2 s/d +2)
+    // ⏱️ Manual Offset (slider dari settings)
     params.adjustments.fajr = settings.fajrOffset;
     params.adjustments.dhuhr = settings.dhuhrOffset;
     params.adjustments.asr = settings.asrOffset;
@@ -32,27 +32,23 @@ class PrayerTimeService {
         return CalculationMethod.muslim_world_league.getParameters();
 
       case PrayerMethodType.sihat:
-        return _sihatIndonesiaParams(); // ✅ BARU
+        return _sihatIndonesiaParams(); // ✅ Metode SIHAT
     }
   }
 
   /// 🏥 Metode SIHAT Indonesia (Custom)
+  /// Sesuai dengan screenshot: Fajr 04:33, Dhuhr 12:07, Asr 15:29, Maghrib 18:19, Isha 19:33
   static CalculationParameters _sihatIndonesiaParams() {
     final params = CalculationParameters(
-      fajrAngle: 20.0,
-      ishaAngle: null, // ❌ JANGAN PAKAI ANGLE
+      fajrAngle: 20.0, // ✅ Subuh: -20°
+      ishaAngle: 18.0, // ✅ Isya: -18°
       method: CalculationMethod.other,
     );
 
-    params.madhab = Madhab.shafi;
+    params.madhab = Madhab.shafi; // ✅ Mazhab Shafi untuk Indonesia
     params.highLatitudeRule = HighLatitudeRule.middle_of_the_night;
 
-    // 🌇 Maghrib = sunset murni
-    params.maghribAngle = null;
-
-    // 🌙 Isya = Maghrib + 90 menit (INI KUNCINYA)
-    params.ishaInterval = 90;
-
+    // Tidak perlu ishaInterval karena sudah pakai ishaAngle
     return params;
   }
 
