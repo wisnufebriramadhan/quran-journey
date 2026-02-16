@@ -1,4 +1,3 @@
-
 export 'mushaf_page_widget.dart';
 export 'mushaf_surah_header.dart';
 export 'mushaf_bismillah.dart';

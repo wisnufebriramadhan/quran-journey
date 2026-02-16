@@ -132,4 +132,6 @@ class MushafPageController {
   void notifyListeners() {
     onStateChanged?.call();
   }
+
+  
 }
