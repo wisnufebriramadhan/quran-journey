@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quran_tracker/features/mushaf/controller/mushaf_page_controller.dart';
-import 'package:quran_tracker/features/mushaf/mushaf_page_view.dart';
+import 'package:quran_tracker/features/mushaf/widgets/mushaf_colors.dart';
 
 /// Widget AppBar untuk Mushaf Page
 class MushafAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -25,7 +25,8 @@ class MushafAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: MushafColors.appBarBrown,
       foregroundColor: MushafColors.goldAccent,
-      elevation: 0,
+      elevation: 1.5,
+      shadowColor: Colors.black.withOpacity(0.2),
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -37,17 +38,17 @@ class MushafAppBar extends StatelessWidget implements PreferredSizeWidget {
                 const Text(
                   'Al-Qur\'an',
                   style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    letterSpacing: 0.3,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.6,
                   ),
                 ),
                 Text(
                   controller.currentSurahTitle ?? 'Memuat...',
                   style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.3,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.25,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -55,10 +56,10 @@ class MushafAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
             decoration: BoxDecoration(
               color: MushafColors.goldAccent.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: MushafColors.goldAccent.withOpacity(0.3),
                 width: 1,
@@ -77,6 +78,28 @@ class MushafAppBar extends StatelessWidget implements PreferredSizeWidget {
         ],
       ),
       actions: [
+        IconButton(
+          icon: Icon(
+            controller.isNightMode
+                ? Icons.dark_mode_rounded
+                : Icons.light_mode_rounded,
+            size: 20,
+          ),
+          onPressed: controller.toggleNightMode,
+          tooltip: controller.isNightMode ? 'Mode terang' : 'Mode malam',
+        ),
+        IconButton(
+          icon: Icon(
+            controller.isComfortReading
+                ? Icons.text_fields_rounded
+                : Icons.format_size_rounded,
+            size: 20,
+          ),
+          onPressed: controller.toggleComfortReading,
+          tooltip: controller.isComfortReading
+              ? 'Nonaktifkan baca nyaman'
+              : 'Aktifkan baca nyaman',
+        ),
         if (!controller.isDataDownloaded)
           IconButton(
             icon: const Icon(Icons.cloud_download_outlined, size: 20),
@@ -109,6 +132,7 @@ class MushafAppBar extends StatelessWidget implements PreferredSizeWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+          color: Colors.white,
           onSelected: (value) {
             if (value == 'download') {
               onDownload();

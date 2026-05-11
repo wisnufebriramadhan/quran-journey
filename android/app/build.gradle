@@ -7,10 +7,11 @@ plugins {
 
 android {
     namespace = "com.wisnufebri.quran.app"
-    compileSdk 35
-    ndkVersion "26.1.10909125"
+    compileSdk 36
+    ndkVersion "28.2.13676358"
 
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
@@ -21,8 +22,8 @@ android {
 
     defaultConfig {
         applicationId "com.wisnufebri.quran.app"
-        minSdk 21
-        targetSdk 35
+        minSdkVersion flutter.minSdkVersion
+        targetSdk 36
         versionCode 1
         versionName "1.0.0"
     }
@@ -37,6 +38,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+}
+
+dependencies {
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.2'
 }
 
 flutter {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:quran_tracker/features/mushaf/controller/mushaf_page_controller.dart';
 import 'package:quran_tracker/features/mushaf/widgets/mushaf_ayah_number.dart';
 import 'package:quran_tracker/features/mushaf/widgets/mushaf_bismillah.dart';
+import 'package:quran_tracker/features/mushaf/widgets/mushaf_colors.dart';
 import 'package:quran_tracker/features/mushaf/widgets/mushaf_surah_header.dart';
 import '../../../core/models/quran_verse.dart';
 
@@ -16,18 +17,19 @@ class MushafPageWidget extends StatelessWidget {
     required this.controller,
   });
 
-  static const bgPage = Color(0xFFFAF6ED);
-  static const textColor = Color(0xFF1A1A1A);
-  static const ayahCircleColor = Color(0xFF2E7D7D);
-  static const goldAccent = Color(0xFFD4AF37);
-
   @override
   Widget build(BuildContext context) {
+    final isNight = controller.isNightMode;
+    final pageColor = isNight ? MushafColors.nightPage : MushafColors.bgPage;
+    final textColor = isNight ? MushafColors.nightText : const Color(0xFF1A1A1A);
+    final baseFontSize = controller.isComfortReading ? 31.0 : 27.5;
+    final lineHeight = controller.isComfortReading ? 2.3 : 2.1;
+
     return FutureBuilder<List<QuranVerse>>(
       future: controller.fetchPageVerses(pageNumber),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return _buildLoadingState();
+          return _buildLoadingState(textColor);
         }
 
         if (snapshot.hasError) {
@@ -39,12 +41,18 @@ class MushafPageWidget extends StatelessWidget {
           return const Center(child: Text('Tidak ada data'));
         }
 
-        return _buildContent(verses);
+        return _buildContent(
+          verses,
+          pageColor: pageColor,
+          textColor: textColor,
+          baseFontSize: baseFontSize,
+          lineHeight: lineHeight,
+        );
       },
     );
   }
 
-  Widget _buildLoadingState() {
+  Widget _buildLoadingState(Color textColor) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -62,7 +70,7 @@ class MushafPageWidget extends StatelessWidget {
               ],
             ),
             child: const CircularProgressIndicator(
-              color: ayahCircleColor,
+              color: MushafColors.ayahCircle,
               strokeWidth: 3,
             ),
           ),
@@ -111,10 +119,21 @@ class MushafPageWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildContent(List<QuranVerse> verses) {
+  Widget _buildContent(
+    List<QuranVerse> verses, {
+    required Color pageColor,
+    required Color textColor,
+    required double baseFontSize,
+    required double lineHeight,
+  }) {
     return Container(
       decoration: BoxDecoration(
-        color: bgPage,
+        color: pageColor,
+        border: Border.all(
+          color: MushafColors.goldAccent.withOpacity(0.2),
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -125,19 +144,26 @@ class MushafPageWidget extends StatelessWidget {
       ),
       child: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           child: Column(
             children: [
-              _buildDecorativeBorder(),
+              _buildTopMetaCard(textColor),
               const SizedBox(height: 20),
+              _buildDecorativeBorder(),
+              const SizedBox(height: 18),
               Directionality(
                 textDirection: TextDirection.rtl,
-                child: _buildVerses(verses),
+                child: _buildVerses(
+                  verses,
+                  textColor: textColor,
+                  baseFontSize: baseFontSize,
+                  lineHeight: lineHeight,
+                ),
               ),
               const SizedBox(height: 32),
               _buildDecorativeBorder(),
               const SizedBox(height: 20),
-              _buildPageNumber(),
+              _buildPageNumber(textColor),
               const SizedBox(height: 20),
             ],
           ),
@@ -153,9 +179,9 @@ class MushafPageWidget extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             Colors.transparent,
-            goldAccent.withOpacity(0.4),
-            goldAccent,
-            goldAccent.withOpacity(0.4),
+            MushafColors.goldAccent.withOpacity(0.4),
+            MushafColors.goldAccent,
+            MushafColors.goldAccent.withOpacity(0.4),
             Colors.transparent,
           ],
         ),
@@ -163,7 +189,42 @@ class MushafPageWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildPageNumber() {
+  Widget _buildTopMetaCard(Color textColor) {
+    final primaryTextColor = controller.isNightMode
+        ? MushafColors.nightText
+        : MushafColors.appBarBrown;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: MushafColors.goldAccent.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: MushafColors.goldAccent.withOpacity(0.2)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Hal. $pageNumber',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              color: primaryTextColor,
+            ),
+          ),
+          Text(
+            controller.isComfortReading ? 'Baca Nyaman: ON' : 'Baca Nyaman: OFF',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: textColor.withOpacity(0.75),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPageNumber(Color textColor) {
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -173,13 +234,13 @@ class MushafPageWidget extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-              color: goldAccent,
+              color: MushafColors.goldAccent,
               width: 2.5,
             ),
-            color: bgPage,
+            color: Colors.transparent,
             boxShadow: [
               BoxShadow(
-                color: goldAccent.withOpacity(0.25),
+                color: MushafColors.goldAccent.withOpacity(0.25),
                 blurRadius: 10,
                 spreadRadius: 2,
               ),
@@ -192,14 +253,14 @@ class MushafPageWidget extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-              color: goldAccent.withOpacity(0.35),
+              color: MushafColors.goldAccent.withOpacity(0.35),
               width: 1.2,
             ),
           ),
         ),
         Text(
           pageNumber.toString(),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: textColor,
@@ -210,17 +271,22 @@ class MushafPageWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildVerses(List<QuranVerse> verses) {
+  Widget _buildVerses(
+    List<QuranVerse> verses, {
+    required Color textColor,
+    required double baseFontSize,
+    required double lineHeight,
+  }) {
     return RichText(
       textDirection: TextDirection.rtl,
       textAlign: TextAlign.justify,
       text: TextSpan(
-        style: const TextStyle(
+        style: TextStyle(
           fontFamily: 'UthmaniHafs',
-          fontSize: 28,
-          height: 2.2,
+          fontSize: baseFontSize,
+          height: lineHeight,
           color: textColor,
-          letterSpacing: 0.3,
+          letterSpacing: 0.2,
         ),
         children: verses.expand((v) {
           final spans = <InlineSpan>[];
@@ -231,9 +297,13 @@ class MushafPageWidget extends StatelessWidget {
                 child: Column(
                   children: [
                     const SizedBox(height: 12),
-                    MushafSurahHeader(surahNumber: v.surah),
+                    MushafSurahHeader(
+                      surahNumber: v.surah,
+                      isNightMode: controller.isNightMode,
+                    ),
                     const SizedBox(height: 20),
-                    if (v.surah != 1 && v.surah != 9) const MushafBismillah(),
+                    if (v.surah != 1 && v.surah != 9)
+                      MushafBismillah(isNightMode: controller.isNightMode),
                     const SizedBox(height: 12),
                   ],
                 ),
@@ -247,7 +317,10 @@ class MushafPageWidget extends StatelessWidget {
           spans.add(
             WidgetSpan(
               alignment: PlaceholderAlignment.middle,
-              child: MushafAyahNumber(ayahNumber: v.ayah),
+              child: MushafAyahNumber(
+                ayahNumber: v.ayah,
+                isNightMode: controller.isNightMode,
+              ),
             ),
           );
           spans.add(const TextSpan(text: ' '));

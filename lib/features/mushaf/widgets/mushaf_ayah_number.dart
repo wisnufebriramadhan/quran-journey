@@ -1,19 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:quran_tracker/features/mushaf/widgets/mushaf_colors.dart';
 
 /// Widget untuk menampilkan nomor ayat dengan design melingkar
 class MushafAyahNumber extends StatelessWidget {
   final int ayahNumber;
+  final bool isNightMode;
 
   const MushafAyahNumber({
     super.key,
     required this.ayahNumber,
+    this.isNightMode = false,
   });
-
-  static const bgPage = Color(0xFFFAF6ED);
-  static const ayahCircleColor = Color(0xFF2E7D7D);
 
   @override
   Widget build(BuildContext context) {
+    final bgPage = isNightMode ? MushafColors.nightPage : MushafColors.bgPage;
+    final ayahCircleColor = isNightMode
+        ? MushafColors.goldAccent.withOpacity(0.9)
+        : MushafColors.ayahCircle;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 3),
       child: Stack(
@@ -62,7 +67,7 @@ class MushafAyahNumber extends StatelessWidget {
           // Number text
           Text(
             _toArabicNumber(ayahNumber),
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'UthmaniHafs',
               fontSize: 15,
               color: ayahCircleColor,

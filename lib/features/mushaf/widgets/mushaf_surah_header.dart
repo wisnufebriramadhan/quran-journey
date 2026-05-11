@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
 import '../../../../core/models/surah_data.dart';
+import 'mushaf_colors.dart';
 import 'surah_header_painter.dart';
 
 /// Widget untuk menampilkan header Surah
 class MushafSurahHeader extends StatelessWidget {
   final int surahNumber;
+  final bool isNightMode;
 
   const MushafSurahHeader({
     super.key,
     required this.surahNumber,
+    this.isNightMode = false,
   });
-
-  static const textColor = Color(0xFF1A1A1A);
-  static const goldAccent = Color(0xFFD4AF37);
 
   @override
   Widget build(BuildContext context) {
     final surah = SurahData.byNumber(surahNumber);
+    final textColor = isNightMode ? MushafColors.nightText : const Color(0xFF1A1A1A);
     
     return Column(
       children: [
@@ -41,7 +42,7 @@ class MushafSurahHeader extends StatelessWidget {
                       color: textColor,
                       shadows: [
                         Shadow(
-                          color: goldAccent.withOpacity(0.3),
+                          color: MushafColors.goldAccent.withOpacity(0.3),
                           blurRadius: 4,
                           offset: const Offset(0, 1),
                         ),

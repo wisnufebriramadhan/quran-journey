@@ -3,6 +3,7 @@ import 'package:adhan/adhan.dart';
 import 'package:hijri/hijri_calendar.dart';
 
 import '../../../core/services/location_service.dart';
+import '../../../core/services/widget_service.dart';
 import '../../settings/data/settings_model.dart';
 import 'prayer_time_service.dart';
 import 'notification_service.dart';
@@ -60,6 +61,17 @@ class PrayerTimeProvider extends ChangeNotifier {
 
       // ✅ Get Hijri Date with offset
       hijriDate = _getHijriDate();
+
+      // ✅ Update Widget
+      if (nextPrayerName != null && nextPrayerTime != null) {
+        final timeStr = '${nextPrayerTime!.hour.toString().padLeft(2, '0')}:${nextPrayerTime!.minute.toString().padLeft(2, '0')}';
+        WidgetService.updatePrayerWidget(
+          name: nextPrayerName!,
+          time: timeStr,
+          city: city ?? 'Lokasi...',
+          hijri: hijriDate ?? '-',
+        );
+      }
 
       await _scheduleNotifications();
     } catch (e) {

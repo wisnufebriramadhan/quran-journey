@@ -2,6 +2,7 @@ import 'package:audio_service/audio_service.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:quran_tracker/features/extentions.dart';
+import 'package:quran_tracker/core/services/widget_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class QuranAudioHandler extends BaseAudioHandler
@@ -30,7 +31,10 @@ class QuranAudioHandler extends BaseAudioHandler
     await _restoreLastSession();
 
     /// 🔊 Player state → notification
-    _player.playerStateStream.listen(_broadcastState);
+    _player.playerStateStream.listen((state) {
+      _broadcastState(state);
+      _updateWidget(); // Sync widget on play/pause
+    });
 
     /// ▶️ Auto next surah
     _player.processingStateStream.listen((state) {
@@ -48,10 +52,32 @@ class QuranAudioHandler extends BaseAudioHandler
 
       if (position.inSeconds % 3 == 0) {
         _saveResumeState();
+        _updateWidget(); // Sync widget progress every few seconds
       }
     });
 
     _isInitialized = true;
+  }
+
+  /// =====================
+  /// WIDGET SYNC
+  /// =====================
+  void _updateWidget() {
+    final surahName = (currentSurah >= 1 && currentSurah <= 114) 
+        ? surahNames[currentSurah - 1] 
+        : 'Unknown';
+    
+    final duration = _player.duration ?? Duration.zero;
+    final position = _player.position;
+    final progress = duration.inSeconds > 0 
+        ? position.inSeconds / duration.inSeconds 
+        : 0.0;
+
+    WidgetService.updateMurattalWidget(
+      surahName: surahName,
+      isPlaying: _player.playing,
+      progress: progress,
+    );
   }
 
   /// =====================
@@ -108,6 +134,7 @@ class QuranAudioHandler extends BaseAudioHandler
       if (autoPlay) {
         await play();
       }
+      _updateWidget();
     } catch (e) {
       debugPrint('❌ Audio load error: $e');
     }
@@ -149,19 +176,32 @@ class QuranAudioHandler extends BaseAudioHandler
     if (posMs != null) {
       await _player.seek(Duration(milliseconds: posMs));
     }
+    _updateWidget();
   }
 
   /// =====================
   /// CONTROLS
   /// =====================
   @override
-  Future<void> play() => _player.play();
+  Future<void> play() {
+    final res = _player.play();
+    _updateWidget();
+    return res;
+  }
 
   @override
-  Future<void> pause() => _player.pause();
+  Future<void> pause() {
+    final res = _player.pause();
+    _updateWidget();
+    return res;
+  }
 
   @override
-  Future<void> seek(Duration position) => _player.seek(position);
+  Future<void> seek(Duration position) {
+    final res = _player.seek(position);
+    _updateWidget();
+    return res;
+  }
 
   @override
   Future<void> skipToNext() => _nextSurah(autoPlay: true);

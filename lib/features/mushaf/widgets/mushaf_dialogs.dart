@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quran_tracker/features/mushaf/controller/mushaf_page_controller.dart';
-import 'package:quran_tracker/features/mushaf/mushaf_page_view.dart';
+import 'package:quran_tracker/features/mushaf/widgets/mushaf_colors.dart';
 import 'package:quran_tracker/features/shimmer_loading_dialog.dart';
 
 /// Class untuk menangani semua dialog di Mushaf Page

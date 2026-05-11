@@ -24,6 +24,20 @@ String getHijriToday() {
   return '${hijri[2]} ${hijriMonths[hijri[1] - 1]} ${hijri[0]} H';
 }
 
+String getDayNameIndo(DateTime date) {
+  const days = [
+    'Senin',
+    'Selasa',
+    'Rabu',
+    'Kamis',
+    'Jumat',
+    'Sabtu',
+    'Minggu',
+  ];
+  // weekday: 1 (Monday) to 7 (Sunday)
+  return days[date.weekday - 1];
+}
+
 int _gregorianToJulianDay(int y, int m, int d) {
   if (m <= 2) {
     y -= 1;

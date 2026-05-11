@@ -48,7 +48,7 @@ class HomeProvider {
     );
     _animationController.forward();
 
-    _hadistPageController = PageController(viewportFraction: 0.92);
+    _hadistPageController = PageController(viewportFraction: 1.0);
     _setupHadistAutoScroll();
   }
 
@@ -88,20 +88,23 @@ class HomeProvider {
   Future<void> navigateTo(BuildContext context, int index) async {
     switch (index) {
       case 1:
-        // Mushaf Digital - langsung navigasi
+        // Mushaf Digital
         await Navigator.pushNamed(context, AppRoutes.mushafDigital);
         break;
       case 2:
-        // Catatan - perlu auth
-        // Redundant karena sudah di menu_grid, tapi untuk safety
+        // Catatan - perlu auth check
         await _navigateWithAuthCheck(context, AppRoutes.quranLog);
         break;
       case 3:
-        // Prayer Time - langsung navigasi
+        // Prayer Time
         await Navigator.pushNamed(context, AppRoutes.prayerTime);
         break;
       case 4:
-        // Settings - langsung navigasi
+        // Belajar (Learning)
+        await Navigator.pushNamed(context, AppRoutes.learning);
+        break;
+      case 5:
+        // Settings (Setelan)
         await Navigator.pushNamed(context, AppRoutes.settings);
         break;
       default:

@@ -95,8 +95,16 @@ class IslamicPatternPainter extends CustomPainter {
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1;
 
-        canvas.drawLine(Offset(x - radius1, y), Offset(x + radius1, y), paint2);
-        canvas.drawLine(Offset(x, y - radius1), Offset(x, y + radius1), paint2);
+        canvas.drawLine(
+          Offset(x - radius1, y),
+          Offset(x + radius1, y),
+          paint2,
+        );
+        canvas.drawLine(
+          Offset(x, y - radius1),
+          Offset(x, y + radius1),
+          paint2,
+        );
       }
     }
   }

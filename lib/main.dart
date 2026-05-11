@@ -38,7 +38,8 @@ import 'features/prayer_time/prayer_time_page.dart';
 
 // ===== SETTINGS =====
 import 'features/settings/settings_provider.dart';
-import 'features/settings/persentation/prayer_settings_page.dart';
+import 'features/settings/presentation/settings_page.dart';
+import 'features/settings/presentation/prayer_settings_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -179,7 +180,8 @@ class _QuranTrackerAppState extends State<QuranTrackerApp>
           AppRoutes.home: (_) => const HomePage(),
           AppRoutes.quranLog: (_) => const QuranLogPage(),
           AppRoutes.prayerTime: (_) => const PrayerTimePage(),
-          AppRoutes.settings: (_) => const PrayerSettingsPage(),
+          AppRoutes.settings: (_) => const SettingsPage(),
+          AppRoutes.prayerSettings: (_) => const PrayerSettingsPage(),
           AppRoutes.mushafDigital: (_) => const MushafPageView(initialPage: 1),
           AppRoutes.learning: (_) => const LearningPage(),
         },

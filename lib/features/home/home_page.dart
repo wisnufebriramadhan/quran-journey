@@ -61,7 +61,6 @@ class _HomePageState extends State<HomePage>
 
               // Main Content
               SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 24),
                 child: AnimatedBuilder(
                   animation: _homeProvider.animationController,
                   builder: (context, child) {
@@ -76,14 +75,19 @@ class _HomePageState extends State<HomePage>
                   child: Column(
                     children: [
                       HomeHeader(provider: _homeProvider),
-                      const SizedBox(height: 16),
-                      HadistBanner(
-                          pageController: _homeProvider.hadistPageController),
-                      Transform.translate(
-                        offset: const Offset(0, -40),
+                      const SizedBox(height: 20),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: HadistBanner(
+                          pageController: _homeProvider.hadistPageController,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: MenuGrid(onNavigate: _onNavigate),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 40),
                     ],
                   ),
                 ),

@@ -18,6 +18,8 @@ class MushafPageController {
   String? currentSurahTitle;
   bool isDataDownloaded = false;
   bool showOverlay = true;
+  bool isNightMode = false;
+  bool isComfortReading = true;
 
   // Callback untuk update UI
   VoidCallback? onStateChanged;
@@ -87,6 +89,16 @@ class MushafPageController {
 
   void toggleOverlay() {
     showOverlay = !showOverlay;
+    notifyListeners();
+  }
+
+  void toggleNightMode() {
+    isNightMode = !isNightMode;
+    notifyListeners();
+  }
+
+  void toggleComfortReading() {
+    isComfortReading = !isComfortReading;
     notifyListeners();
   }
 

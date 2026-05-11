@@ -44,4 +44,16 @@ class AuthRepository {
       },
     );
   }
+
+  Future<Map<String, dynamic>> getProfile() async {
+    try {
+      final response = await api.dio.get('/api/profile');
+      return response.data['data'] ?? {};
+    } on DioException catch (e) {
+      if (e.response?.data is Map && e.response!.data['message'] != null) {
+        throw e.response!.data['message'];
+      }
+      throw 'Gagal mengambil profil.';
+    }
+  }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:quran_tracker/features/mushaf/controller/mushaf_page_controller.dart';
 import 'package:quran_tracker/features/mushaf/widgets/mushaf_app_bar.dart';
 import 'package:quran_tracker/features/mushaf/widgets/mushaf_body.dart';
+import 'package:quran_tracker/features/mushaf/widgets/mushaf_colors.dart';
 import 'package:quran_tracker/features/mushaf/widgets/mushaf_dialogs.dart';
 
 /// View untuk Mushaf Page - hanya menangani tampilan UI utama
@@ -42,35 +43,58 @@ class _MushafPageViewState extends State<MushafPageView>
 
   @override
   Widget build(BuildContext context) {
+    final backgroundGradient = controllerGradient(_controller.isNightMode);
     return Scaffold(
-      backgroundColor: MushafColors.lightBg,
+      backgroundColor: _controller.isNightMode
+          ? MushafColors.nightBackground
+          : MushafColors.lightBg,
       appBar: MushafAppBar(
         controller: _controller,
         onDownload: () => MushafDialogs.showDownload(context, _controller),
         onClearData: () => MushafDialogs.showClearData(context, _controller),
         onJumpToPage: () => MushafDialogs.showJumpToPage(context, _controller),
       ),
-      body: MushafBody(controller: _controller),
-      floatingActionButton: FloatingActionButton.small(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: backgroundGradient,
+        ),
+        child: MushafBody(controller: _controller),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: FloatingActionButton.extended(
         backgroundColor: MushafColors.secondaryBrown,
         foregroundColor: MushafColors.goldAccent,
-        elevation: 4,
+        elevation: 6,
         onPressed: _controller.toggleOverlay,
-        child: Icon(
+        icon: Icon(
           _controller.showOverlay
               ? Icons.visibility_off_rounded
               : Icons.visibility_rounded,
           size: 18,
         ),
+        label: Text(_controller.showOverlay ? 'Sembunyikan' : 'Tampilkan'),
       ),
     );
   }
-}
 
-/// Konstanta warna untuk Mushaf
-class MushafColors {
-  static const appBarBrown = Color(0xFF3E2723);
-  static const secondaryBrown = Color(0xFF6D4C41);
-  static const goldAccent = Color(0xFFD4AF37);
-  static const lightBg = Color(0xFFFAFAFA);
+  LinearGradient controllerGradient(bool isNightMode) {
+    if (isNightMode) {
+      return const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Color(0xFF1A202A),
+          Color(0xFF10151D),
+        ],
+      );
+    }
+    return const LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        Color(0xFFFBF7EF),
+        Color(0xFFF7F1E5),
+      ],
+    );
+  }
 }

@@ -1,6 +1,8 @@
 import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../../../routes/app_routes.dart';
 
 class SplashPage extends StatefulWidget {
@@ -10,66 +12,44 @@ class SplashPage extends StatefulWidget {
   State<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
-  late AnimationController _fadeController;
-  late AnimationController _scaleController;
-  late AnimationController _rotateController;
-  late AnimationController _shimmerController;
-
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _rotateAnimation;
-  late Animation<double> _shimmerAnimation;
+class _SplashPageState extends State<SplashPage>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _fadeInAnimation;
+  late final Animation<double> _logoScaleAnimation;
+  late final Animation<double> _floatAnimation;
+  late final Animation<double> _shimmerAnimation;
 
   @override
   void initState() {
     super.initState();
-
-    // Fade animation
-    _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+    _controller = AnimationController(
       vsync: this,
-    );
-    _fadeAnimation = CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeIn,
+      duration: const Duration(milliseconds: 2800),
     );
 
-    // Scale animation
-    _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
+    _fadeInAnimation = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.0, 0.35, curve: Curves.easeOut),
     );
-    _scaleAnimation = CurvedAnimation(
-      parent: _scaleController,
-      curve: Curves.elasticOut,
+    _logoScaleAnimation = Tween<double>(begin: 0.88, end: 1).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.45, curve: Curves.easeOutBack),
+      ),
     );
-
-    // Rotate animation
-    _rotateController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
-      vsync: this,
+    _floatAnimation = Tween<double>(begin: 0, end: 8).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.2, 1.0, curve: Curves.easeInOut),
+      ),
     );
-    _rotateAnimation = CurvedAnimation(
-      parent: _rotateController,
-      curve: Curves.easeInOut,
-    );
-
-    // Shimmer animation
-    _shimmerController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
-      vsync: this,
-    )..repeat();
     _shimmerAnimation = CurvedAnimation(
-      parent: _shimmerController,
-      curve: Curves.easeInOut,
+      parent: _controller,
+      curve: const Interval(0.15, 1.0, curve: Curves.easeInOut),
     );
 
-    // Start animations
-    _fadeController.forward();
-    _scaleController.forward();
-    _rotateController.forward();
-
+    _controller.forward();
     _init();
   }
 
@@ -77,17 +57,12 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     await Future.delayed(const Duration(milliseconds: 3000));
 
     if (!mounted) return;
-
-    // Langsung ke home tanpa cek auth
     Navigator.pushReplacementNamed(context, AppRoutes.home);
   }
 
   @override
   void dispose() {
-    _fadeController.dispose();
-    _scaleController.dispose();
-    _rotateController.dispose();
-    _shimmerController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
@@ -100,357 +75,282 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
         statusBarBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        body: Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Color(0xFF3E2723),
-                Color(0xFF4A3428),
-                Color(0xFF5D4037),
-                Color(0xFF6D4C41),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Stack(
-            children: [
-              // Background Pattern
-              CustomPaint(
-                painter: IslamicPatternPainter(),
-                size: Size.infinite,
-              ),
-
-              // Animated stars
-              CustomPaint(
-                painter: AnimatedStarsPainter(_shimmerAnimation.value),
-                size: Size.infinite,
-              ),
-
-              // Main Content
-              Center(
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Animated Icon with glow effect
-                      ScaleTransition(
-                        scale: _scaleAnimation,
-                        child: AnimatedBuilder(
-                          animation: _rotateAnimation,
-                          builder: (context, child) {
-                            return Transform.rotate(
-                              angle: _rotateAnimation.value * 0.1,
-                              child: Container(
-                                padding: const EdgeInsets.all(32),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: RadialGradient(
-                                    colors: [
-                                      Colors.amber.shade300.withOpacity(0.3),
-                                      Colors.transparent,
-                                    ],
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.amber.withOpacity(0.3),
-                                      blurRadius: 60,
-                                      spreadRadius: 20,
-                                    ),
-                                  ],
-                                ),
-                                child: Container(
-                                  padding: const EdgeInsets.all(28),
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.amber.shade300,
-                                        Colors.amber.shade600,
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.amber.shade400
-                                            .withOpacity(0.5),
-                                        blurRadius: 30,
-                                        offset: const Offset(0, 10),
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Icon(
-                                    Icons.menu_book_rounded,
-                                    size: 72,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-
-                      const SizedBox(height: 48),
-
-                      // App Title with shimmer effect
-                      AnimatedBuilder(
-                        animation: _shimmerAnimation,
-                        builder: (context, child) {
-                          return ShaderMask(
-                            shaderCallback: (bounds) {
-                              return LinearGradient(
-                                colors: [
-                                  Colors.white.withOpacity(0.6),
-                                  Colors.white,
-                                  Colors.white.withOpacity(0.6),
-                                ],
-                                stops: [
-                                  _shimmerAnimation.value - 0.3,
-                                  _shimmerAnimation.value,
-                                  _shimmerAnimation.value + 0.3,
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ).createShader(bounds);
-                            },
-                            child: const Text(
-                              'Quran Journey',
-                              style: TextStyle(
-                                fontSize: 36,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                                letterSpacing: 1.5,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black26,
-                                    offset: Offset(0, 4),
-                                    blurRadius: 8,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // Subtitle
-                      Text(
-                        'Catat ibadah harianmu',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white.withOpacity(0.85),
-                          letterSpacing: 0.5,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-
-                      const SizedBox(height: 60),
-
-                      // Loading indicator
-                      SizedBox(
-                        width: 50,
-                        height: 50,
-                        child: Stack(
-                          children: [
-                            AnimatedBuilder(
-                              animation: _rotateController,
-                              builder: (context, child) {
-                                return Transform.rotate(
-                                  angle: _rotateController.value * 2 * pi,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: Colors.amber.shade300
-                                            .withOpacity(0.3),
-                                        width: 3,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                            Center(
-                              child: AnimatedBuilder(
-                                animation: _rotateController,
-                                builder: (context, child) {
-                                  return Transform.rotate(
-                                    angle: -_rotateController.value * 3 * pi,
-                                    child: Container(
-                                      width: 30,
-                                      height: 30,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: Colors.amber.shade400,
-                                          width: 3,
-                                        ),
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            Colors.amber.shade300,
-                                            Colors.transparent,
-                                          ],
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+        body: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, _) {
+            return DecoratedBox(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF0D1528),
+                    Color(0xFF172847),
+                    Color(0xFF27335A),
+                    Color(0xFF3F3959),
+                  ],
                 ),
               ),
-
-              // Bottom decoration
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: Container(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      children: [
-                        Container(
-                          height: 2,
-                          width: 60,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.transparent,
-                                Colors.amber.shade300,
-                                Colors.transparent,
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Version 1.0.0',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.white.withOpacity(0.5),
-                            letterSpacing: 1,
-                          ),
-                        ),
-                      ],
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Positioned(
+                    left: -120,
+                    top: -80 + (8 * sin(_controller.value * 2 * pi)),
+                    child: const _GlowOrb(
+                      size: 280,
+                      color: Color(0x6658E8E1),
                     ),
                   ),
-                ),
+                  Positioned(
+                    right: -100,
+                    bottom: -90 + (12 * cos(_controller.value * 2 * pi)),
+                    child: const _GlowOrb(
+                      size: 260,
+                      color: Color(0x66FFC36B),
+                    ),
+                  ),
+                  CustomPaint(
+                    painter: _SubtleGridPainter(progress: _controller.value),
+                  ),
+                  SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 28),
+                      child: Column(
+                        children: [
+                          const Spacer(),
+                          FadeTransition(
+                            opacity: _fadeInAnimation,
+                            child: Transform.translate(
+                              offset: Offset(0, -_floatAnimation.value),
+                              child: ScaleTransition(
+                                scale: _logoScaleAnimation,
+                                child: const _BrandBadge(),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 26),
+                          FadeTransition(
+                            opacity: _fadeInAnimation,
+                            child: ShaderMask(
+                              shaderCallback: (bounds) {
+                                final start = (_shimmerAnimation.value - 0.2)
+                                    .clamp(0.0, 1.0);
+                                final end = (_shimmerAnimation.value + 0.2)
+                                    .clamp(0.0, 1.0);
+                                return LinearGradient(
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                  colors: const [
+                                    Color(0xFFD6E6FF),
+                                    Colors.white,
+                                    Color(0xFFD6E6FF),
+                                  ],
+                                  stops: [start, _shimmerAnimation.value, end],
+                                ).createShader(bounds);
+                              },
+                              child: const Text(
+                                'Quran Journey',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.4,
+                                  height: 1,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          FadeTransition(
+                            opacity: _fadeInAnimation,
+                            child: Text(
+                              'Temani ibadah harian dengan catatan,\nmurattal, dan pengingat sholat.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.82),
+                                fontSize: 14.5,
+                                height: 1.45,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ),
+                          const Spacer(),
+                          FadeTransition(
+                            opacity: _fadeInAnimation,
+                            child: const _ModernLoader(),
+                          ),
+                          const SizedBox(height: 22),
+                          FadeTransition(
+                            opacity: _fadeInAnimation,
+                            child: Text(
+                              'Preparing your daily journey...',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.68),
+                                fontSize: 12.5,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 28),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
   }
 }
 
-/// Islamic Pattern Painter
-class IslamicPatternPainter extends CustomPainter {
+class _BrandBadge extends StatelessWidget {
+  const _BrandBadge();
+
   @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(0.03)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-
-    const spacing = 80.0;
-    const radius1 = 25.0;
-    const radius2 = 12.0;
-
-    for (double x = -spacing; x < size.width + spacing; x += spacing) {
-      for (double y = -spacing; y < size.height + spacing; y += spacing) {
-        canvas.drawCircle(Offset(x, y), radius1, paint);
-        canvas.drawCircle(Offset(x, y), radius2, paint);
-
-        final paint2 = Paint()
-          ..color = Colors.white.withOpacity(0.02)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1;
-
-        canvas.drawLine(
-          Offset(x - radius1, y),
-          Offset(x + radius1, y),
-          paint2,
-        );
-        canvas.drawLine(
-          Offset(x, y - radius1),
-          Offset(x, y + radius1),
-          paint2,
-        );
-      }
-    }
+  Widget build(BuildContext context) {
+    return Container(
+      width: 130,
+      height: 130,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(34),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0x55FFFFFF),
+            Color(0x12FFFFFF),
+          ],
+        ),
+        border: Border.all(color: const Color(0x66FFFFFF), width: 1),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x4421426A),
+            blurRadius: 30,
+            offset: Offset(0, 14),
+          ),
+        ],
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: 95,
+            height: 95,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFF6C66A),
+                  Color(0xFFE99B42),
+                ],
+              ),
+            ),
+          ),
+          const Icon(
+            Icons.menu_book_rounded,
+            color: Colors.white,
+            size: 50,
+          ),
+        ],
+      ),
+    );
   }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-/// Animated Stars Painter
-class AnimatedStarsPainter extends CustomPainter {
-  final double animationValue;
+class _ModernLoader extends StatelessWidget {
+  const _ModernLoader();
 
-  AnimatedStarsPainter(this.animationValue);
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 46,
+      height: 46,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          CircularProgressIndicator(
+            strokeWidth: 2.6,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              Colors.white.withOpacity(0.8),
+            ),
+            backgroundColor: Colors.white.withOpacity(0.15),
+          ),
+          Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Color(0xFFFFC874),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GlowOrb extends StatelessWidget {
+  final double size;
+  final Color color;
+
+  const _GlowOrb({
+    required this.size,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [color, Colors.transparent],
+        ),
+      ),
+    );
+  }
+}
+
+class _SubtleGridPainter extends CustomPainter {
+  final double progress;
+
+  const _SubtleGridPainter({required this.progress});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final random = Random(42);
+    const spacing = 48.0;
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(0.045)
+      ..strokeWidth = 0.7
+      ..style = PaintingStyle.stroke;
 
-    for (int i = 0; i < 50; i++) {
-      final x = random.nextDouble() * size.width;
-      final y = random.nextDouble() * size.height;
-
-      // Create pulsing effect
-      final pulse = sin((animationValue * 2 * pi) + (i * 0.5));
-      final opacity = (0.2 + (pulse * 0.3)).clamp(0.0, 0.5);
-      final starSize = 1.5 + (pulse * 1.5);
-
-      final paint = Paint()
-        ..color = Colors.amber.withOpacity(opacity)
-        ..style = PaintingStyle.fill;
-
-      _drawStar(canvas, Offset(x, y), starSize, paint);
+    final drift = 6 * sin(progress * 2 * pi);
+    for (double y = -spacing; y <= size.height + spacing; y += spacing) {
+      final path = Path()
+        ..moveTo(0, y + drift)
+        ..lineTo(size.width, y - drift);
+      canvas.drawPath(path, paint);
     }
-  }
 
-  void _drawStar(Canvas canvas, Offset center, double size, Paint paint) {
-    final path = Path();
-    const points = 5;
-    const angle = (pi * 2) / points;
-
-    for (int i = 0; i < points * 2; i++) {
-      final r = i.isEven ? size : size / 2;
-      final currentAngle = angle * i - pi / 2;
-      final x = center.dx + cos(currentAngle) * r;
-      final y = center.dy + sin(currentAngle) * r;
-
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
+    for (double x = -spacing; x <= size.width + spacing; x += spacing) {
+      final path = Path()
+        ..moveTo(x + drift, 0)
+        ..lineTo(x - drift, size.height);
+      canvas.drawPath(path, paint);
     }
-    path.close();
-    canvas.drawPath(path, paint);
   }
 
   @override
-  bool shouldRepaint(AnimatedStarsPainter oldDelegate) =>
-      animationValue != oldDelegate.animationValue;
+  bool shouldRepaint(covariant _SubtleGridPainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
 }
